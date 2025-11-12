@@ -1,0 +1,274 @@
+{
+  "scripts": [
+    {
+      "name": "Core Setup",
+      "repo": "CoreSetup",
+      "file": "coreSetup.ps1",
+      "description": "Set of processes for a new system setup. Installs essential software using winget and configures system settings.",
+      "githubUrl": "https://github.com/mrdatawolf/CoreSetup",
+      "parameters": [
+        {
+          "name": "SkipWindowsUpdates",
+          "label": "Skip Windows Updates",
+          "type": "switch",
+          "default": false,
+          "description": "Skip checking and installing Windows updates"
+        },
+        {
+          "name": "SkipSoftwareInstall",
+          "label": "Skip Software Installation",
+          "type": "switch",
+          "default": false,
+          "description": "Skip automatic software installation"
+        }
+      ]
+    },
+    {
+      "name": "Gather DNS Info",
+      "repo": "PSGatherDNSInfo",
+      "file": "Get-DomainInfo.ps1",
+      "description": "Retrieves registrar, DNS, A record, MX, SPF, DKIM, and DMARC records for one or more domains.",
+      "githubUrl": "https://github.com/mrdatawolf/PSGatherDNSInfo",
+      "parameters": [
+        {
+          "name": "Domains",
+          "label": "Domain Names",
+          "type": "text",
+          "required": true,
+          "placeholder": "example.com",
+          "description": "Domain name(s) to query (comma-separated for multiple)"
+        },
+        {
+          "name": "DomainListFile",
+          "label": "Domain List File",
+          "type": "text",
+          "placeholder": "C:\\domains.txt",
+          "description": "Optional: Path to file containing domain names (one per line)"
+        },
+        {
+          "name": "ExportCsv",
+          "label": "Export to CSV",
+          "type": "text",
+          "placeholder": "C:\\output.csv",
+          "description": "Optional: Path to export results as CSV"
+        },
+        {
+          "name": "VerboseOutput",
+          "label": "Verbose Output",
+          "type": "switch",
+          "default": false,
+          "description": "Enable verbose output for debugging"
+        }
+      ]
+    },
+    {
+      "name": "New User",
+      "repo": "PSNewUser",
+      "file": "PSAddNewUser.ps1",
+      "description": "User account creation tool for Active Directory domain environments. Creates new users with proper group memberships and settings.",
+      "githubUrl": "https://github.com/mrdatawolf/PSNewUser",
+      "parameters": [
+        {
+          "name": "FirstName",
+          "label": "First Name",
+          "type": "text",
+          "required": true,
+          "placeholder": "John",
+          "description": "User's first name"
+        },
+        {
+          "name": "LastName",
+          "label": "Last Name",
+          "type": "text",
+          "required": true,
+          "placeholder": "Doe",
+          "description": "User's last name"
+        },
+        {
+          "name": "Username",
+          "label": "Username",
+          "type": "text",
+          "required": true,
+          "placeholder": "jdoe",
+          "description": "Active Directory username"
+        },
+        {
+          "name": "Email",
+          "label": "Email Address",
+          "type": "email",
+          "placeholder": "jdoe@company.com",
+          "description": "User's email address"
+        },
+        {
+          "name": "Department",
+          "label": "Department",
+          "type": "text",
+          "placeholder": "IT",
+          "description": "User's department"
+        }
+      ]
+    },
+    {
+      "name": "GPO Gather",
+      "repo": "PSGPOGather",
+      "file": "GPOGather.ps1",
+      "description": "Collects and exports Group Policy Object information from Active Directory domain for analysis and documentation.",
+      "githubUrl": "https://github.com/mrdatawolf/PSGPOGather",
+      "parameters": [
+        {
+          "name": "Domain",
+          "label": "Domain Name",
+          "type": "text",
+          "placeholder": "domain.local",
+          "description": "Active Directory domain name"
+        },
+        {
+          "name": "OutputPath",
+          "label": "Output Path",
+          "type": "text",
+          "placeholder": "C:\\GPOReports",
+          "required": true,
+          "description": "Directory to save GPO reports"
+        },
+        {
+          "name": "ReportFormat",
+          "label": "Report Format",
+          "type": "select",
+          "options": [
+            { "label": "HTML", "value": "HTML" },
+            { "label": "XML", "value": "XML" },
+            { "label": "Both", "value": "Both" }
+          ],
+          "default": "HTML",
+          "description": "Output report format"
+        }
+      ]
+    },
+    {
+      "name": "Get Patch Health",
+      "repo": "PSGetPatchHealth",
+      "file": "PatchStatus.ps1",
+      "description": "Analyzes Windows Update status and patch compliance. Reports on installed updates, missing patches, and update history.",
+      "githubUrl": "https://github.com/mrdatawolf/PSGetPatchHealth",
+      "parameters": [
+        {
+          "name": "ComputerName",
+          "label": "Computer Name",
+          "type": "text",
+          "placeholder": "localhost",
+          "default": "localhost",
+          "description": "Target computer name or IP address"
+        },
+        {
+          "name": "DaysBack",
+          "label": "Days to Look Back",
+          "type": "number",
+          "default": "30",
+          "placeholder": "30",
+          "description": "Number of days of patch history to retrieve"
+        },
+        {
+          "name": "ExportToCSV",
+          "label": "Export to CSV",
+          "type": "switch",
+          "default": false,
+          "description": "Export results to CSV file"
+        }
+      ]
+    },
+    {
+      "name": "Gather Network Data",
+      "repo": "PSGatherNetworkData",
+      "file": "PSGatherIPAndMAC.ps1",
+      "description": "Comprehensive network diagnostic data collection including IP configuration, routing tables, network adapters, and connectivity tests.",
+      "githubUrl": "https://github.com/mrdatawolf/PSGatherNetworkData",
+      "parameters": [
+        {
+          "name": "ComputerName",
+          "label": "Computer Name",
+          "type": "text",
+          "placeholder": "localhost",
+          "default": "localhost",
+          "description": "Target computer name or IP address"
+        },
+        {
+          "name": "OutputPath",
+          "label": "Output Path",
+          "type": "text",
+          "placeholder": "C:\\NetworkData",
+          "description": "Directory to save network data output"
+        },
+        {
+          "name": "IncludeTraceRoute",
+          "label": "Include Trace Route",
+          "type": "switch",
+          "default": false,
+          "description": "Include trace route tests to common destinations"
+        }
+      ]
+    },
+    {
+      "name": "Gather Computer Info",
+      "repo": "PSGatherComputerInfo",
+      "file": "coreInfo.ps1",
+      "description": "Collects comprehensive system information including hardware specs, OS details, installed software, and system configuration.",
+      "githubUrl": "https://github.com/mrdatawolf/PSGatherComputerInfo",
+      "parameters": [
+        {
+          "name": "ComputerName",
+          "label": "Computer Name",
+          "type": "text",
+          "placeholder": "localhost",
+          "default": "localhost",
+          "description": "Target computer name or IP address"
+        },
+        {
+          "name": "OutputPath",
+          "label": "Output Path",
+          "type": "text",
+          "placeholder": "C:\\ComputerInfo",
+          "description": "Directory to save computer information output"
+        },
+        {
+          "name": "IncludeSoftware",
+          "label": "Include Installed Software",
+          "type": "switch",
+          "default": true,
+          "description": "Include list of installed software"
+        }
+      ]
+    },
+    {
+      "name": "Disable Shadow Copy on C",
+      "repo": "PSDisableAndClearShadowCopyOnC",
+      "file": "ClearShadowCopyAndDisable.ps1",
+      "description": "Disables and clears Volume Shadow Copy service on C: drive. Used for troubleshooting or freeing up disk space. USE WITH CAUTION.",
+      "githubUrl": "https://github.com/mrdatawolf/PSDisableAndClearShadowCopyOnC",
+      "parameters": [
+        {
+          "name": "Confirm",
+          "label": "I understand this will delete all shadow copies",
+          "type": "switch",
+          "required": true,
+          "default": false,
+          "description": "Confirmation required - this action cannot be undone"
+        },
+        {
+          "name": "DisableVSS",
+          "label": "Disable VSS Service",
+          "type": "switch",
+          "default": true,
+          "description": "Also disable the Volume Shadow Copy service"
+        }
+      ]
+    },
+    {
+      "name": "Clear Windows Update Cache",
+      "repo": "PSClearWinPatches",
+      "file": "clearWinUpdateCruft.ps1",
+      "description": "Clears Windows Update cache and temporary files. Stops Windows Update services, removes cached files from SoftwareDistribution and catroot2, then restarts services. USE WITH CAUTION.",
+      "githubUrl": "https://github.com/mrdatawolf/PSClearWinPatches",
+      "parameters": []
+    }
+  ]
+}

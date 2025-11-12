@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --version:*)",
+      "Bash(npm:*)",
+      "Bash(node download-scripts.js:*)",
+      "Bash(npx electron:*)",
+      "Bash(node -e:*)",
+      "Bash(where:*)",
+      "Bash(./node_modules/.bin/electron.cmd .)",
+      "Bash(./node_modules/.bin/electron.cmd:*)",
+      "Bash(cat:*)",
+      "Bash(node_modules/electron/dist/electron.exe .)",
+      "Bash(node_modules/electron/dist/electron.exe:*)",
+      "Bash(../node_modules/electron/dist/electron.exe .)",
+      "Bash(curl:*)",
+      "Bash(paste - -)",
+      "Bash(done)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

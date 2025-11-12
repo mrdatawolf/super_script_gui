@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Biztech Script Automation</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Sidebar Toggle Button -->
+  <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="app-header">
+        <img src="../assets/biztech-logo.png" alt="Biztech" class="app-logo">
+        <h1>Script Automation</h1>
+        <p class="app-subtitle">PowerShell Tools by Biztech</p>
+      </div>
+      <nav class="script-list" id="scriptList">
+        <!-- Script buttons will be dynamically generated -->
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Welcome Screen -->
+      <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-content">
+          <h2>Welcome to Biztech Script Automation</h2>
+          <p>Select a script from the left sidebar to get started.</p>
+          <div class="stats">
+            <div class="stat-card">
+              <span class="stat-number" id="scriptCount">0</span>
+              <span class="stat-label">Available Scripts</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Script Detail View -->
+      <div class="script-detail" id="scriptDetail" style="display: none;">
+        <div class="script-header">
+          <div class="script-title-section">
+            <h2 id="scriptTitle">Script Name</h2>
+            <span class="script-badge" id="scriptBadge">PowerShell</span>
+          </div>
+          <p class="script-description" id="scriptDescription">Description will appear here</p>
+        </div>
+
+        <!-- Script Parameters Form -->
+        <div class="parameters-section" id="parametersSection">
+          <h3 id="parametersHeader">Parameters</h3>
+          <form id="parametersForm" class="parameters-form">
+            <!-- Parameters will be dynamically generated -->
+          </form>
+          <!-- Action Buttons -->
+          <div class="action-buttons" id="actionButtons">
+            <button class="btn btn-primary" id="executeBtn">
+              <span class="btn-icon">▶</span>
+              Execute Script
+            </button>
+            <button class="btn btn-secondary" id="clearOutputBtn">
+              <span class="btn-icon">🗑</span>
+              Clear Output
+            </button>
+          </div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-section">
+          <div class="output-header">
+            <h3>Output</h3>
+            <span class="output-status" id="outputStatus">Ready</span>
+          </div>
+          <pre class="output-console" id="outputConsole"></pre>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
