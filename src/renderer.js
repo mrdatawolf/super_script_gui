@@ -19,6 +19,7 @@ const sidebar = document.getElementById('sidebar');
 const sidebarToggle = document.getElementById('sidebarToggle');
 const parametersSection = document.getElementById('parametersSection');
 const parametersHeader = document.getElementById('parametersHeader');
+const loadingSpinner = document.getElementById('loadingSpinner');
 
 // Initialize app
 async function init() {
@@ -43,8 +44,9 @@ function renderScriptList() {
   scriptsData.scripts.forEach(script => {
     const button = document.createElement('button');
     button.className = 'script-button';
+    const adminBadge = script.requiresAdmin ? '<span class="admin-badge" title="Requires Administrator">🛡️</span>' : '';
     button.innerHTML = `
-      <span class="script-button-title">${script.name}</span>
+      <span class="script-button-title">${script.name} ${adminBadge}</span>
       <span class="script-button-subtitle">${script.repo}</span>
     `;
     button.addEventListener('click', () => selectScript(script));
@@ -229,10 +231,18 @@ executeBtn.addEventListener('click', async () => {
   setOutputStatus('running');
   clearOutput();
 
+  // Show loading spinner IMMEDIATELY
+  loadingSpinner.classList.add('active');
+
   // Collapse parameters after execution starts
   setTimeout(() => {
     parametersSection.classList.add('collapsed');
   }, 300);
+
+  // Force multiple repaints to ensure spinner shows before blocking IPC call
+  // Using requestAnimationFrame ensures the browser has painted
+  await new Promise(resolve => requestAnimationFrame(resolve));
+  await new Promise(resolve => requestAnimationFrame(resolve));
 
   try {
     const result = await window.electronAPI.executeScript(currentScript, parameters);
@@ -253,6 +263,8 @@ executeBtn.addEventListener('click', async () => {
     setOutputStatus('error');
     appendOutput({ type: 'stderr', data: '\n\n✗ Error: ' + error.message + '\n' });
   } finally {
+    // Hide loading spinner
+    loadingSpinner.classList.remove('active');
     executeBtn.disabled = false;
     executeBtn.innerHTML = '<span class="btn-icon">▶</span> Execute Script';
   }
@@ -271,6 +283,7 @@ function clearOutput() {
 }
 
 function appendOutput(data) {
+  // Don't hide spinner when output arrives - let the execute handler control it
   const line = document.createElement('span');
   line.textContent = data.data;
 
@@ -311,6 +324,29 @@ sidebarToggle.addEventListener('click', () => {
 parametersHeader.addEventListener('click', () => {
   parametersSection.classList.toggle('collapsed');
 });
+
+// Festive toggle functionality
+const festiveToggle = document.getElementById('festiveToggle');
+if (festiveToggle) {
+  // Set initial state
+  const isEnabled = window.seasonalEffects?.isEnabled();
+  if (!isEnabled) {
+    festiveToggle.classList.add('disabled');
+  }
+
+  festiveToggle.addEventListener('click', () => {
+    const currentState = window.seasonalEffects?.isEnabled();
+    const newState = !currentState;
+
+    window.seasonalEffects?.toggle(newState);
+
+    if (newState) {
+      festiveToggle.classList.remove('disabled');
+    } else {
+      festiveToggle.classList.add('disabled');
+    }
+  });
+}
 
 // Initialize app when DOM is ready
 init();

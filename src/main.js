@@ -65,6 +65,33 @@ ipcMain.handle('get-scripts', async () => {
   }
 });
 
+// Helper function to clean PowerShell formatting artifacts
+const cleanPowerShellOutput = (text) => {
+  if (!text) return text;
+
+  // Remove PowerShell error formatting artifacts
+  return text
+    // Remove "At line:X char:Y" location lines
+    .replace(/At line:\d+\s+char:\d+\s*\n/g, '')
+    // Remove "At <path>:<line>:<char>" location lines
+    .replace(/At [^\n]+\.ps1:\d+\s+char:\d+\s*\n/g, '')
+    // Remove Read-Host errors in NonInteractive mode
+    .replace(/Read-Host : Windows PowerShell is in NonInteractive mode\. Read and Prompt functionality is not available\.\s*\n/g, '')
+    // Remove the actual Read-Host command line that caused the error
+    .replace(/\+\s+\$null\s*=\s*Read-Host[^\n]*\n/g, '')
+    // Remove "+ ~~~" indicator lines
+    .replace(/\+\s+~+\s*\n/g, '')
+    // Remove CategoryInfo lines
+    .replace(/\s+\+\s+CategoryInfo\s+:[^\n]+\n/g, '')
+    // Remove FullyQualifiedErrorId lines
+    .replace(/\s+\+\s+FullyQualifiedErrorId\s+:[^\n]+\n/g, '')
+    // Remove extra blank lines (more than 2 in a row)
+    .replace(/\n{3,}/g, '\n\n')
+    // Remove ANSI color codes and special characters
+    .replace(/[\u0000-\u0008\u000B-\u000C\u000E-\u001F\u007F]/g, '')
+    .trim();
+};
+
 // Execute PowerShell script
 ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
   return new Promise((resolve, reject) => {
@@ -102,13 +129,63 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
     }
 
     console.log('Executing PowerShell command:', psCommand);
+    console.log('Requires admin:', scriptInfo.requiresAdmin);
 
-    const powershell = spawn('powershell.exe', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-ExecutionPolicy', 'Bypass',
-      '-Command', psCommand
-    ]);
+    let powershell;
+    let tempOutputFile;
+    let tempErrorFile;
+
+    // Check if script requires admin elevation
+    if (scriptInfo.requiresAdmin) {
+      // Create temporary files to capture output from elevated process
+      const os = require('os');
+      const crypto = require('crypto');
+      const tempId = crypto.randomBytes(8).toString('hex');
+      tempOutputFile = path.join(os.tmpdir(), `biztech-output-${tempId}.txt`);
+      tempErrorFile = path.join(os.tmpdir(), `biztech-error-${tempId}.txt`);
+
+      // Create a wrapper command that redirects output to temp files
+      const wrapperCommand = `
+        try {
+          ${psCommand} *> "${tempOutputFile}" 2>&1
+          exit $LASTEXITCODE
+        } catch {
+          $_ | Out-File -FilePath "${tempErrorFile}" -Encoding UTF8
+          exit 1
+        }
+      `.trim();
+
+      // Escape the wrapper command for passing to Start-Process
+      const escapedWrapper = wrapperCommand.replace(/"/g, '\\"').replace(/\n/g, '; ');
+
+      // Use Start-Process with -Verb RunAs to trigger UAC
+      // -WindowStyle Hidden hides the window
+      const elevatedCommand = `
+        $process = Start-Process powershell.exe -ArgumentList '-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-Command','${escapedWrapper}' -Verb RunAs -PassThru -Wait -WindowStyle Hidden
+        exit $process.ExitCode
+      `.trim();
+
+      powershell = spawn('powershell.exe', [
+        '-NoProfile',
+        '-ExecutionPolicy', 'Bypass',
+        '-Command', elevatedCommand
+      ]);
+
+      // Send message that UAC prompt is expected
+      event.sender.send('script-output', {
+        type: 'stdout',
+        data: '⚠️  This script requires administrator privileges.\nPlease approve the UAC prompt to continue...\n\n'
+      });
+
+    } else {
+      // Normal execution without elevation
+      powershell = spawn('powershell.exe', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy', 'Bypass',
+        '-Command', psCommand
+      ]);
+    }
 
     let output = '';
     let errorOutput = '';
@@ -145,9 +222,58 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
       }
     });
 
-    powershell.on('close', (code) => {
-      if (code === 0) {
-        resolve({ success: true, output, exitCode: code });
+    powershell.on('close', async (code) => {
+      // If admin elevation was used, read output from temp files
+      if (scriptInfo.requiresAdmin && tempOutputFile) {
+        try {
+          let outputContent = await fs.readFile(tempOutputFile, 'utf-8');
+          if (outputContent) {
+            // Clean the output before displaying
+            outputContent = cleanPowerShellOutput(outputContent);
+            output += outputContent;
+            event.sender.send('script-output', { type: 'stdout', data: outputContent });
+          }
+        } catch (err) {
+          // File might not exist if script didn't produce output
+          console.log('No output file found (may be normal):', err.message);
+        }
+
+        try {
+          let errorContent = await fs.readFile(tempErrorFile, 'utf-8');
+          if (errorContent) {
+            // Clean error output too
+            errorContent = cleanPowerShellOutput(errorContent);
+            allErrorOutput += errorContent;
+            errorOutput += errorContent;
+            event.sender.send('script-output', { type: 'stderr', data: errorContent });
+          }
+        } catch (err) {
+          // File might not exist if no errors occurred
+          console.log('No error file found (this is good!):', err.message);
+        }
+
+        // Clean up temp files
+        try {
+          await fs.unlink(tempOutputFile).catch(() => {});
+          await fs.unlink(tempErrorFile).catch(() => {});
+        } catch (err) {
+          console.log('Error cleaning up temp files:', err);
+        }
+      }
+
+      // Check if exit code is 1 but only due to Read-Host error (script actually succeeded)
+      // For elevated scripts, also check the output content
+      const combinedContent = output + allErrorOutput;
+      const isOnlyReadHostError = code === 1 &&
+                                   (combinedContent.includes('Read-Host') ||
+                                    combinedContent.includes('NonInteractive mode') ||
+                                    combinedContent.includes('PSInvalidOperationException')) &&
+                                   !combinedContent.includes('AuthorizationManager') &&
+                                   !combinedContent.includes('execution policy') &&
+                                   !combinedContent.includes('UnauthorizedAccess');
+
+      if (code === 0 || isOnlyReadHostError) {
+        resolve({ success: true, output, exitCode: 0 });
       } else {
         // Check for common errors and provide helpful guidance
         // Use allErrorOutput for detection (includes filtered errors)

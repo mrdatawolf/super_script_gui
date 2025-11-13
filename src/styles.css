@@ -133,6 +133,14 @@ body {
   display: block;
 }
 
+.admin-badge {
+  display: inline-block;
+  font-size: 0.9rem;
+  margin-left: 0.25rem;
+  vertical-align: middle;
+  opacity: 0.8;
+}
+
 /* Main Content */
 .main-content {
   flex: 1;
@@ -360,6 +368,33 @@ body {
   pointer-events: none;
 }
 
+/* Festive Toggle Button */
+.festive-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 200;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.festive-toggle:hover {
+  background-color: var(--primary-hover);
+  transform: scale(1.05);
+}
+
+.festive-toggle.disabled {
+  background-color: var(--text-secondary);
+  opacity: 0.6;
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;
@@ -477,6 +512,13 @@ body {
   color: white;
 }
 
+.output-container {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
 .output-console {
   background-color: #000;
   color: #0f0;
@@ -495,6 +537,42 @@ body {
 .output-console:empty::before {
   content: 'No output yet...';
   color: #666;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  position: fixed;
+  top: 1rem;
+  right: 5rem;
+  z-index: 200;
+  background-color: var(--primary-color);
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  width: 48px;
+  height: 48px;
+}
+
+.loading-spinner.active {
+  display: flex;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Scrollbar Styling */

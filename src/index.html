@@ -4,19 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
-  <title>Biztech Script Automation</title>
+  <title>Biztech Tools</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <!-- Sidebar Toggle Button -->
   <button class="sidebar-toggle" id="sidebarToggle">☰</button>
 
+  <!-- Festive Toggle Button -->
+  <button class="festive-toggle" id="festiveToggle" title="Toggle seasonal effects">🎉</button>
+
+  <!-- Loading Spinner Indicator -->
+  <div class="loading-spinner" id="loadingSpinner">
+    <div class="spinner"></div>
+  </div>
+
   <div class="app-container">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="app-header">
         <img src="../assets/biztech-logo.png" alt="Biztech" class="app-logo">
-        <h1>Script Automation</h1>
+        <h1>Tools</h1>
         <p class="app-subtitle">PowerShell Tools by Biztech</p>
       </div>
       <nav class="script-list" id="scriptList">
@@ -29,8 +37,8 @@
       <!-- Welcome Screen -->
       <div class="welcome-screen" id="welcomeScreen">
         <div class="welcome-content">
-          <h2>Welcome to Biztech Script Automation</h2>
-          <p>Select a script from the left sidebar to get started.</p>
+          <h2>Welcome to Biztech Tools</h2>
+          <p>Select a tool from the left sidebar to get started.</p>
           <div class="stats">
             <div class="stat-card">
               <span class="stat-number" id="scriptCount">0</span>
@@ -75,12 +83,15 @@
             <h3>Output</h3>
             <span class="output-status" id="outputStatus">Ready</span>
           </div>
-          <pre class="output-console" id="outputConsole"></pre>
+          <div class="output-container">
+            <pre class="output-console" id="outputConsole"></pre>
+          </div>
         </div>
       </div>
     </main>
   </div>
 
+  <script src="seasonal-effects.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

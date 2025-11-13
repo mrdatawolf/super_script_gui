@@ -244,6 +244,7 @@
       "file": "ClearShadowCopyAndDisable.ps1",
       "description": "Disables and clears Volume Shadow Copy service on C: drive. Used for troubleshooting or freeing up disk space. USE WITH CAUTION.",
       "githubUrl": "https://github.com/mrdatawolf/PSDisableAndClearShadowCopyOnC",
+      "requiresAdmin": true,
       "parameters": [
         {
           "name": "Confirm",
@@ -268,6 +269,7 @@
       "file": "clearWinUpdateCruft.ps1",
       "description": "Clears Windows Update cache and temporary files. Stops Windows Update services, removes cached files from SoftwareDistribution and catroot2, then restarts services. USE WITH CAUTION.",
       "githubUrl": "https://github.com/mrdatawolf/PSClearWinPatches",
+      "requiresAdmin": true,
       "parameters": []
     }
   ]
