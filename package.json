@@ -29,6 +29,9 @@
       ],
       "icon": "assets/icon.ico"
     },
+    "asarUnpack": [
+      "scripts/**/*"
+    ],
     "files": [
       "src/**/*",
       "scripts/**/*",

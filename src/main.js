@@ -46,7 +46,17 @@ app.on('activate', () => {
 // Get list of available scripts
 ipcMain.handle('get-scripts', async () => {
   try {
-    const configPath = path.join(__dirname, '../scripts/scripts-config.json');
+    // Handle both development and production paths
+    let configPath;
+    if (app.isPackaged) {
+      // Production: use app.asar.unpacked path
+      const asarUnpackedPath = __dirname.replace('app.asar', 'app.asar.unpacked');
+      configPath = path.join(asarUnpackedPath, '../scripts/scripts-config.json');
+    } else {
+      // Development: use regular path
+      configPath = path.join(__dirname, '../scripts/scripts-config.json');
+    }
+
     const data = await fs.readFile(configPath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
@@ -58,7 +68,17 @@ ipcMain.handle('get-scripts', async () => {
 // Execute PowerShell script
 ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
   return new Promise((resolve, reject) => {
-    const scriptPath = path.join(__dirname, '../scripts/bundled', scriptInfo.repo, scriptInfo.file);
+    // Handle both development and production paths
+    // In production, scripts are unpacked from asar to app.asar.unpacked
+    let scriptPath;
+    if (app.isPackaged) {
+      // Production: use app.asar.unpacked path
+      const asarUnpackedPath = __dirname.replace('app.asar', 'app.asar.unpacked');
+      scriptPath = path.join(asarUnpackedPath, '../scripts/bundled', scriptInfo.repo, scriptInfo.file);
+    } else {
+      // Development: use regular path
+      scriptPath = path.join(__dirname, '../scripts/bundled', scriptInfo.repo, scriptInfo.file);
+    }
 
     // Build PowerShell command with parameters
     let psCommand = `& "${scriptPath}"`;
