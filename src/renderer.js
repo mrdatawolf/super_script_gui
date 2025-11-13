@@ -74,6 +74,9 @@ function selectScript(script) {
   // Generate parameter form
   generateParameterForm(script.parameters);
 
+  // Expand parameters section when selecting a new script
+  parametersSection.classList.remove('collapsed');
+
   // Clear output
   clearOutput();
 }
