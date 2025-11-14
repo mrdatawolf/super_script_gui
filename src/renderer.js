@@ -351,5 +351,30 @@ if (festiveToggle) {
   });
 }
 
+// Tools List toggle functionality
+const toolsListToggle = document.getElementById('toolsListToggle');
+const toolsListView = document.getElementById('toolsListView');
+if (toolsListToggle && toolsListView) {
+  toolsListToggle.addEventListener('click', () => {
+    const isShowingToolsList = toolsListView.style.display !== 'none';
+
+    if (isShowingToolsList) {
+      // Switch back to scripts view
+      welcomeScreen.style.display = currentScript ? 'none' : 'flex';
+      scriptDetail.style.display = currentScript ? 'block' : 'none';
+      toolsListView.style.display = 'none';
+      toolsListToggle.classList.remove('active');
+      toolsListToggle.title = 'View Tools List';
+    } else {
+      // Switch to tools list view
+      welcomeScreen.style.display = 'none';
+      scriptDetail.style.display = 'none';
+      toolsListView.style.display = 'flex';
+      toolsListToggle.classList.add('active');
+      toolsListToggle.title = 'Back to Scripts';
+    }
+  });
+}
+
 // Initialize app when DOM is ready
 init();

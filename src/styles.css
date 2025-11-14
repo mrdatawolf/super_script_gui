@@ -395,6 +395,33 @@ body {
   opacity: 0.6;
 }
 
+/* Tools List Toggle Button */
+.tools-list-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 10rem;
+  z-index: 200;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tools-list-toggle:hover {
+  background-color: var(--primary-hover);
+  transform: scale(1.05);
+}
+
+.tools-list-toggle.active {
+  background-color: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(22, 126, 39, 0.4);
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;
@@ -573,6 +600,21 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Tools List View */
+.tools-list-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.tools-list-view webview {
+  flex: 1;
+  border: none;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
 }
 
 /* Scrollbar Styling */
