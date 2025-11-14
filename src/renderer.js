@@ -55,7 +55,7 @@ function renderScriptList() {
 }
 
 // Select and display script
-function selectScript(script) {
+async function selectScript(script) {
   currentScript = script;
 
   // Update UI
@@ -79,6 +79,44 @@ function selectScript(script) {
 
   // Clear output
   clearOutput();
+
+  // Check for updates in the background (don't await - let it run async)
+  checkForScriptUpdates(script);
+}
+
+// Check for script updates in the background
+async function checkForScriptUpdates(script) {
+  try {
+    const updateResult = await window.electronAPI.checkUpdates(script);
+
+    if (updateResult.hasUpdate) {
+      // Show update notification
+      const updateMessage = `A newer version of "${script.name}" is available.\n\nWould you like to download and use the latest version?`;
+
+      if (confirm(updateMessage)) {
+        // User wants to update
+        appendOutput({ type: 'stdout', data: `📥 Downloading latest version of ${script.name}...\n` });
+
+        const downloadResult = await window.electronAPI.downloadScript(script);
+
+        if (downloadResult.success) {
+          appendOutput({ type: 'stdout', data: `✅ Successfully updated to latest version!\n` });
+          // Show success message
+          scriptBadge.textContent = 'Updated!';
+          scriptBadge.style.backgroundColor = '#10b981';
+          setTimeout(() => {
+            scriptBadge.textContent = 'PowerShell';
+            scriptBadge.style.backgroundColor = '';
+          }, 3000);
+        } else {
+          appendOutput({ type: 'stderr', data: `❌ Failed to download update: ${downloadResult.message}\n` });
+        }
+      }
+    }
+  } catch (error) {
+    // Silently fail - don't interrupt user workflow
+    console.error('Update check failed:', error);
+  }
 }
 
 // Generate parameter input form
