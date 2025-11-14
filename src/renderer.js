@@ -119,6 +119,41 @@ async function checkForScriptUpdates(script) {
   }
 }
 
+// LocalStorage key prefix for saved parameters
+const STORAGE_PREFIX = 'biztech-script-params-';
+
+// Save parameters to localStorage
+function saveParameterValues(scriptName, parameters) {
+  try {
+    const storageKey = STORAGE_PREFIX + scriptName;
+    localStorage.setItem(storageKey, JSON.stringify(parameters));
+  } catch (error) {
+    console.error('Failed to save parameters:', error);
+  }
+}
+
+// Load saved parameters from localStorage
+function loadSavedParameters(scriptName) {
+  try {
+    const storageKey = STORAGE_PREFIX + scriptName;
+    const saved = localStorage.getItem(storageKey);
+    return saved ? JSON.parse(saved) : null;
+  } catch (error) {
+    console.error('Failed to load saved parameters:', error);
+    return null;
+  }
+}
+
+// Clear saved parameters for a script
+function clearSavedParameters(scriptName) {
+  try {
+    const storageKey = STORAGE_PREFIX + scriptName;
+    localStorage.removeItem(storageKey);
+  } catch (error) {
+    console.error('Failed to clear saved parameters:', error);
+  }
+}
+
 // Generate parameter input form
 function generateParameterForm(parameters) {
   parametersForm.innerHTML = '';
@@ -127,6 +162,10 @@ function generateParameterForm(parameters) {
     parametersForm.innerHTML = '<p style="color: var(--text-secondary);">This script has no parameters.</p>';
     return;
   }
+
+  // Load saved values for this script
+  const savedValues = loadSavedParameters(currentScript.name);
+  let hasSavedValues = false;
 
   parameters.forEach(param => {
     const formGroup = document.createElement('div');
@@ -146,6 +185,7 @@ function generateParameterForm(parameters) {
     formGroup.appendChild(label);
 
     let input;
+    let savedValue = savedValues ? savedValues[param.name] : undefined;
 
     switch (param.type) {
       case 'boolean':
@@ -156,7 +196,14 @@ function generateParameterForm(parameters) {
         input.type = 'checkbox';
         input.id = param.name;
         input.name = param.name;
-        input.checked = param.default || false;
+
+        // Use saved value if exists, otherwise use default
+        if (savedValue !== undefined) {
+          input.checked = savedValue;
+          hasSavedValues = true;
+        } else {
+          input.checked = param.default || false;
+        }
 
         const checkboxLabel = document.createElement('label');
         checkboxLabel.textContent = param.description || 'Enable this option';
@@ -188,7 +235,11 @@ function generateParameterForm(parameters) {
           input.appendChild(opt);
         });
 
-        if (param.default) {
+        // Use saved value if exists, otherwise use default
+        if (savedValue !== undefined && savedValue !== null && savedValue !== '') {
+          input.value = savedValue;
+          hasSavedValues = true;
+        } else if (param.default) {
           input.value = param.default;
         }
 
@@ -202,9 +253,15 @@ function generateParameterForm(parameters) {
         input.name = param.name;
         input.rows = 4;
         input.placeholder = param.placeholder || '';
-        if (param.default) {
+
+        // Use saved value if exists, otherwise use default
+        if (savedValue !== undefined && savedValue !== null && savedValue !== '') {
+          input.value = savedValue;
+          hasSavedValues = true;
+        } else if (param.default) {
           input.value = param.default;
         }
+
         formGroup.appendChild(input);
         break;
 
@@ -216,7 +273,11 @@ function generateParameterForm(parameters) {
         input.name = param.name;
         input.placeholder = param.placeholder || '';
 
-        if (param.default) {
+        // Use saved value if exists, otherwise use default
+        if (savedValue !== undefined && savedValue !== null && savedValue !== '') {
+          input.value = savedValue;
+          hasSavedValues = true;
+        } else if (param.default) {
           input.value = param.default;
         }
 
@@ -237,6 +298,11 @@ function generateParameterForm(parameters) {
 
     parametersForm.appendChild(formGroup);
   });
+
+  // Show indicator if saved values were loaded
+  if (hasSavedValues) {
+    showSavedValuesIndicator();
+  }
 }
 
 // Execute script
@@ -291,6 +357,9 @@ executeBtn.addEventListener('click', async () => {
     if (result.success) {
       setOutputStatus('success');
       appendOutput({ type: 'stdout', data: '\n\n✓ Script completed successfully\n' });
+
+      // Save parameters for next time (only on successful execution)
+      saveParameterValues(currentScript.name, parameters);
     } else {
       setOutputStatus('error');
       // Show exit code and any helpful error messages
@@ -352,6 +421,44 @@ function setOutputStatus(status) {
     case 'error':
       outputStatus.textContent = 'Error';
       break;
+  }
+}
+
+// Show indicator that saved values were loaded
+function showSavedValuesIndicator() {
+  // Check if indicator already exists
+  let indicator = document.getElementById('savedValuesIndicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'savedValuesIndicator';
+    indicator.className = 'saved-values-indicator';
+    indicator.innerHTML = `
+      <span class="indicator-icon">💾</span>
+      <span class="indicator-text">Saved values loaded</span>
+      <button class="clear-saved-btn" id="clearSavedBtn" title="Clear saved values">✕</button>
+    `;
+
+    // Insert at the top of the parameters form
+    parametersForm.insertBefore(indicator, parametersForm.firstChild);
+
+    // Add click handler for clear button
+    const clearBtn = document.getElementById('clearSavedBtn');
+    clearBtn.addEventListener('click', () => {
+      if (confirm(`Clear saved values for "${currentScript.name}"?`)) {
+        clearSavedParameters(currentScript.name);
+        hideSavedValuesIndicator();
+        // Regenerate form with defaults
+        generateParameterForm(currentScript.parameters);
+      }
+    });
+  }
+}
+
+// Hide saved values indicator
+function hideSavedValuesIndicator() {
+  const indicator = document.getElementById('savedValuesIndicator');
+  if (indicator) {
+    indicator.remove();
   }
 }
 

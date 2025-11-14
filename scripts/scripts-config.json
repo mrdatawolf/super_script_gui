@@ -316,6 +316,72 @@
           "description": "Remove and block the new Outlook app"
         }
       ]
+    },
+    {
+      "name": "Check Cloudflare Connector Versions",
+      "repo": "PSCurrentVersionOfConnectors",
+      "file": "PSCurrentVersionOfConnectors.ps1",
+      "description": "Checks Cloudflare tunnel connector versions and identifies outdated tunnels. Requires Cloudflare API credentials. Can use .env file or parameters.",
+      "githubUrl": "https://github.com/mrdatawolf/PSCurrentVersionOfConnectors",
+      "requiresAdmin": false,
+      "parameters": [
+        {
+          "name": "AuthEmail",
+          "label": "Cloudflare Auth Email",
+          "type": "email",
+          "required": false,
+          "placeholder": "your-email@example.com",
+          "description": "Cloudflare account email (leave blank to use .env file)"
+        },
+        {
+          "name": "AuthKey",
+          "label": "Cloudflare API Key",
+          "type": "text",
+          "required": false,
+          "placeholder": "your_api_key_here",
+          "description": "Cloudflare API key (leave blank to use .env file) - WARNING: Will be visible on screen"
+        },
+        {
+          "name": "AccountId",
+          "label": "Cloudflare Account ID",
+          "type": "text",
+          "required": false,
+          "placeholder": "your_account_id",
+          "description": "Cloudflare account ID (leave blank to use .env file)"
+        },
+        {
+          "name": "ZoneId",
+          "label": "Cloudflare Zone ID",
+          "type": "text",
+          "required": false,
+          "placeholder": "your_zone_id",
+          "description": "Cloudflare zone ID (optional, currently not used by script)"
+        },
+        {
+          "name": "CurrentVersion",
+          "label": "Expected Connector Version",
+          "type": "text",
+          "required": false,
+          "default": "2025.1.0",
+          "placeholder": "2025.1.0",
+          "description": "Expected/current connector version to compare against (leave blank to use .env file)"
+        },
+        {
+          "name": "OutputLocation",
+          "label": "Output Location",
+          "type": "text",
+          "required": false,
+          "placeholder": "S:\\PBIData\\Biztech\\CloudFlared_Versions",
+          "description": "Output location for data export (optional, currently not used by script)"
+        },
+        {
+          "name": "More",
+          "label": "Show Detailed Output",
+          "type": "switch",
+          "default": false,
+          "description": "Show detailed tunnel information grouped by status"
+        }
+      ]
     }
   ]
 }

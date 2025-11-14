@@ -9,6 +9,7 @@ Featuring the Biztech signature green theme (#167E27) and corporate branding.
 - **Biztech Branded**: Professional interface with Biztech colors and logo
 - **Modern UI**: Clean, dark-themed interface built with Electron
 - **Dynamic Forms**: Automatically generates input forms based on script parameters
+- **Parameter Persistence**: Automatically saves and restores parameter values for each script (localStorage)
 - **Real-time Output**: View PowerShell script output as it executes
 - **UAC Elevation**: Automatic administrator privilege elevation for scripts that require it
 - **Clean Output**: Filtered PowerShell output for better readability
@@ -16,6 +17,7 @@ Featuring the Biztech signature green theme (#167E27) and corporate branding.
 - **Seasonal Effects**: Date-based festive animations (winter, Valentine's, St. Patrick's, April Fools, Halloween)
 - **Collapsible UI**: Accordion-style sidebar and parameter sections for better space management
 - **GitHub Integration**: Download and update scripts directly from GitHub
+- **Automatic Update Checking**: Checks for script updates when selecting a script from sidebar
 - **Offline Support**: Bundle default script versions for offline use
 - **Cross-platform**: Runs on Windows (primary target)
 
@@ -31,6 +33,7 @@ Featuring the Biztech signature green theme (#167E27) and corporate branding.
 8. **Disable Shadow Copy on C** - Volume Shadow Copy management (⚠️ Requires Admin)
 9. **Clear Windows Update Cache** - Clears Windows Update cache and temp files (⚠️ Requires Admin)
 10. **Core Fixes** - Checks for issues in core tools and attempts to fix them (⚠️ Requires Admin)
+11. **Check Cloudflare Connector Versions** - Checks Cloudflare tunnel connector versions (Requires API credentials)
 
 ## Installation
 
@@ -114,19 +117,24 @@ Script configurations are defined in [scripts/scripts-config.json](scripts/scrip
 
 1. Launch the application
 2. Select a script from the sidebar (scripts with 🛡️ require administrator access)
-3. Fill in the required parameters
+3. Fill in the required parameters (saved values from last run will auto-load)
 4. Click "Execute Script"
 5. Approve UAC prompt if the script requires admin privileges
 6. View real-time output in the console
-7. Use the festive toggle (🎉) to enable/disable seasonal effects
+7. Parameters are automatically saved on successful execution
 
 ### UI Features
 
 - **Sidebar Toggle** (☰): Collapse/expand the script list sidebar
 - **Festive Toggle** (🎉): Enable/disable date-based seasonal animations
+- **Tools List Toggle** (📚): View the full list of available PowerShell tools
 - **Loading Spinner**: Shows when a script is executing
 - **Collapsible Parameters**: Click the "Parameters" header to collapse the form
+- **Parameter Persistence**: Values saved automatically after successful execution
+  - 💾 Indicator shows when saved values are loaded
+  - ✕ Click the × button in the indicator to clear saved values
 - **Real-time Output**: Script output streams in real-time as it executes
+- **Automatic Update Checking**: Scripts are checked for updates when selected
 
 ## Development
 
@@ -200,7 +208,17 @@ Created by mrdatawolf
 - Unauthenticated GitHub API requests are limited to 60/hour
 - Add GitHub token to `github-service.js` for higher limits
 
-## Recent Updates (v1.0.2)
+## Recent Updates (v1.1.0)
+
+- ✅ **Parameter Persistence**: Automatically saves and restores form values using localStorage
+- ✅ **Automatic Update Checking**: Scripts checked for updates when selected from sidebar
+- ✅ **Tools List Integration**: View full tools repository via webview (📚 button)
+- ✅ **CoreFixes Script**: Added GUI parameters for system repair operations
+- ✅ **Cloudflare Connector Script**: Check tunnel connector versions with API integration
+- ✅ **Comma-Separated Values**: Support for PowerShell array parameters
+- ✅ **Enhanced Error Handling**: Better detection of script failures and exit codes
+
+### Previous Updates (v1.0.x)
 
 - ✅ UAC elevation support for admin-required scripts
 - ✅ Filtered PowerShell output for cleaner display
@@ -212,11 +230,11 @@ Created by mrdatawolf
 ## Future Enhancements
 
 - [ ] Add GitHub Personal Access Token support
-- [ ] Implement script favorites/recents
 - [ ] Add script output export (to file)
 - [ ] Support for script dependencies
 - [ ] Auto-update checking for the GUI itself
 - [ ] Additional theme customization options
-- [ ] Script execution history
-- [ ] Batch script execution
+- [ ] Script execution history with timestamped logs
+- [ ] Batch script execution (run multiple scripts sequentially)
 - [ ] More seasonal effects and custom animation support
+- [ ] Password-type input fields for sensitive parameters
