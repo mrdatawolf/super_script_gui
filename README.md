@@ -30,6 +30,7 @@ Featuring the Biztech signature green theme (#167E27) and corporate branding.
 7. **Gather Computer Info** - System information collection
 8. **Disable Shadow Copy on C** - Volume Shadow Copy management (⚠️ Requires Admin)
 9. **Clear Windows Update Cache** - Clears Windows Update cache and temp files (⚠️ Requires Admin)
+10. **Core Fixes** - Checks for issues in core tools and attempts to fix them (⚠️ Requires Admin)
 
 ## Installation
 
