@@ -120,9 +120,21 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
               psCommand += ` -${key}`;
             }
           } else {
-            // Escape quotes in string values
-            const escapedValue = String(value).replace(/"/g, '`"');
-            psCommand += ` -${key} "${escapedValue}"`;
+            const stringValue = String(value);
+            // Check if the value contains commas (indicating multiple values)
+            // Convert to PowerShell array syntax: "value1","value2","value3"
+            if (stringValue.includes(',')) {
+              const values = stringValue.split(',').map(v => v.trim()).filter(v => v);
+              const arrayValues = values.map(v => {
+                const escapedValue = v.replace(/"/g, '`"');
+                return `"${escapedValue}"`;
+              }).join(',');
+              psCommand += ` -${key} ${arrayValues}`;
+            } else {
+              // Escape quotes in string values
+              const escapedValue = stringValue.replace(/"/g, '`"');
+              psCommand += ` -${key} "${escapedValue}"`;
+            }
           }
         }
       }

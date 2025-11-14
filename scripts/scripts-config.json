@@ -271,6 +271,51 @@
       "githubUrl": "https://github.com/mrdatawolf/PSClearWinPatches",
       "requiresAdmin": true,
       "parameters": []
+    },
+    {
+      "name": "Core Fixes",
+      "repo": "CoreFixes",
+      "file": "coreFixes.ps1",
+      "description": "Checks for issues in core tools and attempts to fix them. Updates winget and other system tools. USE WITH CAUTION.",
+      "githubUrl": "https://github.com/mrdatawolf/CoreFixes",
+      "requiresAdmin": true,
+      "parameters": [
+        {
+          "name": "RunCommonFixes",
+          "label": "Run Common Fixes",
+          "type": "switch",
+          "default": false,
+          "description": "Automatically run common fixes (IE Reset, DISM, SFC) without prompting"
+        },
+        {
+          "name": "ResetOfficeActivation",
+          "label": "Reset Office Activation",
+          "type": "switch",
+          "default": false,
+          "description": "Run SARA tool to reset Office activation"
+        },
+        {
+          "name": "RepairOffice365",
+          "label": "Repair Office 365",
+          "type": "switch",
+          "default": false,
+          "description": "Run Office 365 repair"
+        },
+        {
+          "name": "RepairAdobeReader",
+          "label": "Repair Adobe Reader",
+          "type": "switch",
+          "default": false,
+          "description": "Attempt to repair Adobe Reader"
+        },
+        {
+          "name": "RemoveNewOutlook",
+          "label": "Remove New Outlook",
+          "type": "switch",
+          "default": false,
+          "description": "Remove and block the new Outlook app"
+        }
+      ]
     }
   ]
 }
