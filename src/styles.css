@@ -44,7 +44,7 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: 250px;
+  width: 220px;
   background-color: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
   display: flex;
@@ -54,6 +54,7 @@ body {
   transition: transform 0.3s ease, width 0.3s ease;
   position: relative;
   z-index: 100;
+  font-size: smaller;
 }
 
 .sidebar.collapsed {
@@ -98,8 +99,8 @@ body {
 
 .script-button {
   width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -107,7 +108,7 @@ body {
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
 }
 
 .script-button:hover {
@@ -128,7 +129,7 @@ body {
 }
 
 .script-button-subtitle {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: var(--text-secondary);
   display: block;
 }
