@@ -4,10 +4,12 @@ A professional Electron-based GUI for PowerShell automation scripts, branded for
 
 Featuring the Biztech signature green theme (#167E27) and corporate branding.
 
+**🎨 Fully White-Labelable** - Customize branding, logo, and theme without code changes. See [WHITE_LABELING.md](WHITE_LABELING.md) for details.
+
 ## Features
 
-- **Biztech Branded**: Professional interface with Biztech colors and logo
-- **Modern UI**: Clean, dark-themed interface built with Electron
+- **White-Label Ready**: Customize name, logo, and theme via config files (no code changes required)
+- **Professional UI**: Clean, dark-themed interface built with Electron
 - **Dynamic Forms**: Automatically generates input forms based on script parameters
 - **Parameter Persistence**: Automatically saves and restores parameter values for each script (localStorage)
 - **Real-time Output**: View PowerShell script output as it executes
@@ -68,6 +70,39 @@ npm run build:win
 
 # Output will be in the dist/ directory
 ```
+
+## White Labeling
+
+**This application is fully white-labelable!** Customize the branding, logo, and theme without touching the code.
+
+### Quick Start
+
+1. **Copy the example files:**
+   ```bash
+   copy branding.json.example branding.json
+   copy custom-theme.css.example custom-theme.css
+   ```
+
+2. **Edit `branding.json`** with your company details:
+   ```json
+   {
+     "appName": "Your Company Tools",
+     "logoPath": "assets/your-logo.png",
+     "windowTitle": "Your Company Tools"
+   }
+   ```
+
+3. **Edit `custom-theme.css`** to match your brand colors:
+   ```css
+   :root {
+     --primary-color: #0066cc;
+     --primary-hover: #0052a3;
+   }
+   ```
+
+4. **Add your logo** to the `assets/` folder
+
+**📖 Complete Guide:** See [WHITE_LABELING.md](WHITE_LABELING.md) for detailed instructions, examples, and advanced customization.
 
 ## Project Structure
 

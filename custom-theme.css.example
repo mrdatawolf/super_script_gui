@@ -1,0 +1,65 @@
+/*
+ * Custom Theme CSS Override
+ *
+ * Copy this file to custom-theme.css to customize the application theme.
+ * Any styles defined here will override the default styles.
+ *
+ * Example: Change primary color from Biztech green to your brand color
+ */
+
+:root {
+  /* Primary brand color - Biztech green by default */
+  /* --primary-color: #167E27; */
+  /* --primary-hover: #1a9930; */
+
+  /* Example: Use blue instead */
+  /* --primary-color: #0066cc; */
+  /* --primary-hover: #0052a3; */
+
+  /* Example: Use purple instead */
+  /* --primary-color: #6a1b9a; */
+  /* --primary-hover: #8e24aa; */
+
+  /* Background colors */
+  /* --bg-primary: #1a1a1a; */
+  /* --bg-secondary: #242424; */
+  /* --bg-tertiary: #2d2d2d; */
+
+  /* Text colors */
+  /* --text-primary: #ffffff; */
+  /* --text-secondary: #b0b0b0; */
+
+  /* Accent colors */
+  /* --success-color: #10b981; */
+  /* --error-color: #ef4444; */
+  /* --warning-color: #f59e0b; */
+
+  /* Border colors */
+  /* --border-color: #3a3a3a; */
+}
+
+/* Example: Customize the logo container */
+/*
+.logo-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+*/
+
+/* Example: Customize buttons */
+/*
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #63408a 100%);
+}
+*/
+
+/* Example: Customize sidebar */
+/*
+.sidebar {
+  background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+}
+*/
