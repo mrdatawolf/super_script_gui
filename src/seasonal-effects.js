@@ -165,10 +165,10 @@ class WinterEffect {
 
       if (flake.y >= surfaceY - flake.radius) {
         if (segmentIndex >= 0 && segmentIndex < accumulation.length) {
-          // Increased accumulation for more visible buildup
-          accumulation[segmentIndex] += flake.radius * 0.15;
-          if (segmentIndex > 0) accumulation[segmentIndex - 1] += flake.radius * 0.075;
-          if (segmentIndex < accumulation.length - 1) accumulation[segmentIndex + 1] += flake.radius * 0.075;
+          // Much higher accumulation for visible buildup
+          accumulation[segmentIndex] += flake.radius * 3.0;
+          if (segmentIndex > 0) accumulation[segmentIndex - 1] += flake.radius * 1.5;
+          if (segmentIndex < accumulation.length - 1) accumulation[segmentIndex + 1] += flake.radius * 1.5;
         }
         particles[index] = this.createSnowflake(canvas.width, canvas.height, -20);
       }

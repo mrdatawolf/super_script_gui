@@ -4,3 +4,7 @@ build/
 *.log
 .DS_Store
 Thumbs.db
+
+# White-labeling custom files (keep .example versions)
+branding.json
+custom-theme.css

@@ -1,0 +1,8 @@
+{
+  "appName": "Biztech Tools",
+  "logoPath": "assets/logo.png",
+  "windowTitle": "Biztech Tools - PowerShell Automation",
+  "welcomeTitle": "Welcome to Biztech Tools",
+  "welcomeSubtitle": "Select a script from the sidebar to get started",
+  "companyUrl": "https://trustbiztech.com"
+}

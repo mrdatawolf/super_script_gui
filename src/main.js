@@ -401,3 +401,46 @@ ipcMain.handle('download-script', async (event, scriptInfo) => {
     };
   }
 });
+
+// Load branding configuration
+ipcMain.handle('load-branding', async () => {
+  try {
+    const brandingPath = path.join(__dirname, '../branding.json');
+    const data = await fs.readFile(brandingPath, 'utf8');
+    return {
+      success: true,
+      config: JSON.parse(data)
+    };
+  } catch (error) {
+    // Return default branding if file doesn't exist
+    return {
+      success: false,
+      config: {
+        appName: "Biztech Tools",
+        logoPath: "assets/logo.png",
+        windowTitle: "Biztech Tools - PowerShell Automation",
+        welcomeTitle: "Welcome to Biztech Tools",
+        welcomeSubtitle: "Select a script from the sidebar to get started",
+        companyUrl: "https://trustbiztech.com"
+      }
+    };
+  }
+});
+
+// Load custom theme CSS
+ipcMain.handle('load-custom-theme', async () => {
+  try {
+    const themePath = path.join(__dirname, '../custom-theme.css');
+    const css = await fs.readFile(themePath, 'utf8');
+    return {
+      success: true,
+      css: css
+    };
+  } catch (error) {
+    // No custom theme, return empty
+    return {
+      success: false,
+      css: ''
+    };
+  }
+});

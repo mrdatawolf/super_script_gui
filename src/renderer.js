@@ -21,9 +21,78 @@ const parametersSection = document.getElementById('parametersSection');
 const parametersHeader = document.getElementById('parametersHeader');
 const loadingSpinner = document.getElementById('loadingSpinner');
 
+// Apply custom branding
+async function applyBranding() {
+  try {
+    const result = await window.electronAPI.loadBranding();
+    const branding = result.config;
+
+    // Update document title
+    if (branding.windowTitle) {
+      document.title = branding.windowTitle;
+    }
+
+    // Update logo
+    const logoImg = document.querySelector('.logo-container img');
+    if (logoImg && branding.logoPath) {
+      logoImg.src = branding.logoPath;
+      logoImg.alt = branding.appName || 'Logo';
+    }
+
+    // Update app name
+    const appNameElements = document.querySelectorAll('.app-name');
+    appNameElements.forEach(el => {
+      if (branding.appName) {
+        el.textContent = branding.appName;
+      }
+    });
+
+    // Update welcome screen
+    const welcomeTitle = document.querySelector('.welcome-title');
+    if (welcomeTitle && branding.welcomeTitle) {
+      welcomeTitle.textContent = branding.welcomeTitle;
+    }
+
+    const welcomeSubtitle = document.querySelector('.welcome-subtitle');
+    if (welcomeSubtitle && branding.welcomeSubtitle) {
+      welcomeSubtitle.textContent = branding.welcomeSubtitle;
+    }
+
+    console.log('Branding applied:', result.success ? 'Custom' : 'Default');
+  } catch (error) {
+    console.error('Failed to apply branding:', error);
+  }
+}
+
+// Apply custom theme CSS
+async function applyCustomTheme() {
+  try {
+    const result = await window.electronAPI.loadCustomTheme();
+
+    if (result.success && result.css) {
+      // Create style element and inject custom CSS
+      const styleEl = document.createElement('style');
+      styleEl.id = 'custom-theme';
+      styleEl.textContent = result.css;
+      document.head.appendChild(styleEl);
+      console.log('Custom theme loaded');
+    } else {
+      console.log('Using default theme');
+    }
+  } catch (error) {
+    console.error('Failed to apply custom theme:', error);
+  }
+}
+
 // Initialize app
 async function init() {
   try {
+    // Apply branding and custom theme first
+    await Promise.all([
+      applyBranding(),
+      applyCustomTheme()
+    ]);
+
     scriptsData = await window.electronAPI.getScripts();
     renderScriptList();
     scriptCount.textContent = scriptsData.scripts.length;
