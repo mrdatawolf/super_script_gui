@@ -5,7 +5,7 @@ class SeasonalEffects {
     this.ctx = this.canvas.getContext('2d');
     this.particles = [];
     this.accumulation = [];
-    this.maxParticles = 150;
+    this.maxParticles = 75; // Reduced from 150 to 75 (half as much snow)
     this.isRunning = false;
     this.currentEffect = null;
 
@@ -165,9 +165,10 @@ class WinterEffect {
 
       if (flake.y >= surfaceY - flake.radius) {
         if (segmentIndex >= 0 && segmentIndex < accumulation.length) {
-          accumulation[segmentIndex] += flake.radius * 0.1;
-          if (segmentIndex > 0) accumulation[segmentIndex - 1] += flake.radius * 0.05;
-          if (segmentIndex < accumulation.length - 1) accumulation[segmentIndex + 1] += flake.radius * 0.05;
+          // Increased accumulation for more visible buildup
+          accumulation[segmentIndex] += flake.radius * 0.15;
+          if (segmentIndex > 0) accumulation[segmentIndex - 1] += flake.radius * 0.075;
+          if (segmentIndex < accumulation.length - 1) accumulation[segmentIndex + 1] += flake.radius * 0.075;
         }
         particles[index] = this.createSnowflake(canvas.width, canvas.height, -20);
       }
@@ -176,7 +177,9 @@ class WinterEffect {
       if (flake.x > canvas.width + 10) flake.x = -10;
     });
 
-    system.accumulation = accumulation.map(h => Math.max(0, h - 0.02));
+    // Decay rate adjusted for ~45 second lifetime
+    // At 60 FPS: 0.017 * 60 = 1.02 px/sec, so ~45px pile takes ~44 seconds to decay
+    system.accumulation = accumulation.map(h => Math.max(0, h - 0.017));
   }
 
   draw(ctx, width, height, particles, accumulation) {
