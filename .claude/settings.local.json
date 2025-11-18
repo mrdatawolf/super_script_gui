@@ -15,7 +15,16 @@
       "Bash(../node_modules/electron/dist/electron.exe .)",
       "Bash(curl:*)",
       "Bash(paste - -)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(node:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(xxd:*)",
+      "Bash(dir node_moduleselectrondistelectron.exe)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(\"./node_modules/electron/dist/electron.exe\" .)",
+      "Bash(\"./node_modules/electron/dist/electron.exe\" test-require.js)"
     ],
     "deny": [],
     "ask": []
