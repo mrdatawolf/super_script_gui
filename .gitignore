@@ -8,3 +8,6 @@ Thumbs.db
 # White-labeling custom files (keep .example versions)
 branding.json
 custom-theme.css
+
+# Script version tracking (per-installation, not tracked in git)
+scripts/bundled/**/.version

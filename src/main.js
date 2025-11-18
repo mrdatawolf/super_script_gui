@@ -7,6 +7,9 @@ const GitHubService = require('./github-service');
 let mainWindow;
 const githubService = new GitHubService();
 
+// Cache version checks per session to avoid annoying repeated prompts
+const versionCheckCache = new Map();
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1600,
@@ -478,8 +481,19 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
 // Check for script updates from GitHub
 ipcMain.handle('check-updates', async (event, scriptInfo) => {
   try {
+    // Check cache first - only check GitHub once per session per repo
+    const cacheKey = scriptInfo.repo;
+    if (versionCheckCache.has(cacheKey)) {
+      console.log(`[Version Check] Using cached result for ${scriptInfo.repo}`);
+      return versionCheckCache.get(cacheKey);
+    }
+
     const versionFile = path.join(__dirname, '../scripts/bundled', scriptInfo.repo, '.version');
     const result = await githubService.checkForUpdates(scriptInfo.repo, versionFile);
+
+    // Cache the result for this session
+    versionCheckCache.set(cacheKey, result);
+
     return result;
   } catch (error) {
     console.error('Error checking for updates:', error);
@@ -501,6 +515,22 @@ ipcMain.handle('download-script', async (event, scriptInfo) => {
       // Get and save version info
       const latestCommit = await githubService.getLatestCommit(scriptInfo.repo);
       await githubService.saveVersionInfo(versionFile, latestCommit);
+
+      // Verify the version file was written correctly
+      try {
+        const savedVersion = await fs.readFile(versionFile, 'utf-8');
+        console.log(`[Download] Verified version saved: ${savedVersion.trim().substring(0, 8)}`);
+      } catch (err) {
+        console.error(`[Download] Failed to verify version file:`, err);
+      }
+
+      // Update cache with the new version (no update available)
+      versionCheckCache.set(scriptInfo.repo, {
+        hasUpdate: false,
+        currentVersion: latestCommit.trim(),
+        latestVersion: latestCommit.trim()
+      });
+      console.log(`[Version Check] Cache updated for ${scriptInfo.repo} - no update needed`);
 
       return {
         success: true,
