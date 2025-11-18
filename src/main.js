@@ -70,8 +70,34 @@ ipcMain.handle('get-scripts', async () => {
 const cleanPowerShellOutput = (text) => {
   if (!text) return text;
 
-  // Remove PowerShell error formatting artifacts
-  return text
+  // Split into lines for line-by-line filtering
+  let lines = text.split('\n');
+
+  lines = lines.filter(line => {
+    // Remove winget spinner lines (lines that are just spinners: -, \, |, /)
+    if (/^\s*[-\\|/]+\s*$/.test(line)) return false;
+
+    // Remove winget progress bar lines (contain box-drawing characters or their corrupted UTF-8 equivalents)
+    if (/[ΓûÆΓûêΓûÇ\u2500-\u257F]/.test(line)) return false;
+
+    // Remove download progress lines (contain MB / MB or KB / MB)
+    if (/\d+(\.\d+)?\s*(KB|MB|GB)\s*\/\s*\d+(\.\d+)?\s*(KB|MB|GB)/.test(line)) return false;
+
+    // Remove lines that are mostly whitespace with spinners
+    if (/^\s{20,}[-\\|/]\s*$/.test(line)) return false;
+
+    // Remove "Downloading https://" lines
+    if (/^Downloading https?:\/\//.test(line)) return false;
+
+    // Remove "Starting package install..." with spinner
+    if (/^Starting package install\.\.\.[-\\|/]/.test(line)) return false;
+
+    // Keep the line
+    return true;
+  });
+
+  // Join back and apply other filters
+  return lines.join('\n')
     // Remove "At line:X char:Y" location lines
     .replace(/At line:\d+\s+char:\d+\s*\n/g, '')
     // Remove "At <path>:<line>:<char>" location lines
@@ -157,13 +183,13 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
       tempOutputFile = path.join(os.tmpdir(), `biztech-output-${tempId}.txt`);
       tempErrorFile = path.join(os.tmpdir(), `biztech-error-${tempId}.txt`);
 
-      // Create a wrapper command that redirects output to temp files
+      // Create a wrapper command that redirects output to temp files with UTF-8 encoding
       const wrapperCommand = `
         try {
-          ${psCommand} *> "${tempOutputFile}" 2>&1
+          ${psCommand} 2>&1 | Out-File -FilePath "${tempOutputFile}" -Encoding UTF8 -Force
           exit $LASTEXITCODE
         } catch {
-          $_ | Out-File -FilePath "${tempErrorFile}" -Encoding UTF8
+          $_ | Out-File -FilePath "${tempErrorFile}" -Encoding UTF8 -Force
           exit 1
         }
       `.trim();
@@ -189,6 +215,70 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
         type: 'stdout',
         data: '⚠️  This script requires administrator privileges.\nPlease approve the UAC prompt to continue...\n\n'
       });
+
+      // Poll temp files for real-time output streaming
+      let outputFilePosition = 0;
+      let errorFilePosition = 0;
+      let pollingInterval;
+
+      // Helper function to read new content from a file starting at a specific position
+      const readNewContent = async (filePath, startPosition) => {
+        try {
+          const stats = await fs.stat(filePath);
+          const fileSize = stats.size;
+
+          // If file hasn't grown, return null
+          if (fileSize <= startPosition) {
+            return { content: null, newPosition: startPosition };
+          }
+
+          // Read only the new content
+          const buffer = Buffer.alloc(fileSize - startPosition);
+          const fileHandle = await fs.open(filePath, 'r');
+          try {
+            await fileHandle.read(buffer, 0, buffer.length, startPosition);
+            const content = buffer.toString('utf-8');
+            return { content, newPosition: fileSize };
+          } finally {
+            await fileHandle.close();
+          }
+        } catch (err) {
+          // File doesn't exist yet or other error - this is normal at the start
+          if (err.code !== 'ENOENT') {
+            console.log('Error reading temp file:', err.message);
+          }
+          return { content: null, newPosition: startPosition };
+        }
+      };
+
+      // Start polling for output
+      pollingInterval = setInterval(async () => {
+        // Poll output file
+        const outputResult = await readNewContent(tempOutputFile, outputFilePosition);
+        if (outputResult.content) {
+          const cleanedOutput = cleanPowerShellOutput(outputResult.content);
+          if (cleanedOutput) {
+            output += cleanedOutput;
+            event.sender.send('script-output', { type: 'stdout', data: cleanedOutput });
+          }
+          outputFilePosition = outputResult.newPosition;
+        }
+
+        // Poll error file
+        const errorResult = await readNewContent(tempErrorFile, errorFilePosition);
+        if (errorResult.content) {
+          const cleanedError = cleanPowerShellOutput(errorResult.content);
+          if (cleanedError) {
+            allErrorOutput += cleanedError;
+            errorOutput += cleanedError;
+            event.sender.send('script-output', { type: 'stderr', data: cleanedError });
+          }
+          errorFilePosition = errorResult.newPosition;
+        }
+      }, 500); // Poll every 500ms
+
+      // Store interval ID for cleanup
+      powershell.pollingInterval = pollingInterval;
 
     } else {
       // Normal execution without elevation
@@ -236,33 +326,60 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
     });
 
     powershell.on('close', async (code) => {
-      // If admin elevation was used, read output from temp files
+      // If admin elevation was used, stop polling and do final read
       if (scriptInfo.requiresAdmin && tempOutputFile) {
-        try {
-          let outputContent = await fs.readFile(tempOutputFile, 'utf-8');
-          if (outputContent) {
-            // Clean the output before displaying
-            outputContent = cleanPowerShellOutput(outputContent);
-            output += outputContent;
-            event.sender.send('script-output', { type: 'stdout', data: outputContent });
-          }
-        } catch (err) {
-          // File might not exist if script didn't produce output
-          console.log('No output file found (may be normal):', err.message);
+        // Stop the polling interval
+        if (powershell.pollingInterval) {
+          clearInterval(powershell.pollingInterval);
         }
 
+        // Do a final read to catch any remaining content written after last poll
         try {
-          let errorContent = await fs.readFile(tempErrorFile, 'utf-8');
-          if (errorContent) {
-            // Clean error output too
-            errorContent = cleanPowerShellOutput(errorContent);
-            allErrorOutput += errorContent;
-            errorOutput += errorContent;
-            event.sender.send('script-output', { type: 'stderr', data: errorContent });
+          const stats = await fs.stat(tempOutputFile);
+          if (stats.size > outputFilePosition) {
+            const buffer = Buffer.alloc(stats.size - outputFilePosition);
+            const fileHandle = await fs.open(tempOutputFile, 'r');
+            try {
+              await fileHandle.read(buffer, 0, buffer.length, outputFilePosition);
+              const finalContent = buffer.toString('utf-8');
+              const cleanedContent = cleanPowerShellOutput(finalContent);
+              if (cleanedContent) {
+                output += cleanedContent;
+                event.sender.send('script-output', { type: 'stdout', data: cleanedContent });
+              }
+            } finally {
+              await fileHandle.close();
+            }
           }
         } catch (err) {
-          // File might not exist if no errors occurred
-          console.log('No error file found (this is good!):', err.message);
+          if (err.code !== 'ENOENT') {
+            console.log('Error in final output read:', err.message);
+          }
+        }
+
+        // Do a final read of error file
+        try {
+          const stats = await fs.stat(tempErrorFile);
+          if (stats.size > errorFilePosition) {
+            const buffer = Buffer.alloc(stats.size - errorFilePosition);
+            const fileHandle = await fs.open(tempErrorFile, 'r');
+            try {
+              await fileHandle.read(buffer, 0, buffer.length, errorFilePosition);
+              const finalContent = buffer.toString('utf-8');
+              const cleanedContent = cleanPowerShellOutput(finalContent);
+              if (cleanedContent) {
+                allErrorOutput += cleanedContent;
+                errorOutput += cleanedContent;
+                event.sender.send('script-output', { type: 'stderr', data: cleanedContent });
+              }
+            } finally {
+              await fileHandle.close();
+            }
+          }
+        } catch (err) {
+          if (err.code !== 'ENOENT') {
+            console.log('Error in final error read:', err.message);
+          }
         }
 
         // Clean up temp files
