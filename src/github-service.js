@@ -167,17 +167,29 @@ class GitHubService {
         const localVersion = await fs.readFile(localVersionFile, 'utf-8');
         const localCommit = localVersion.trim();
 
+        // Also trim the latest commit for consistency
+        const trimmedLatest = latestCommit.trim();
+        const hasUpdate = trimmedLatest !== localCommit;
+
+        // Debug logging
+        console.log(`[Version Check] ${repoName}:`, {
+          local: localCommit.substring(0, 8),
+          latest: trimmedLatest.substring(0, 8),
+          match: !hasUpdate
+        });
+
         return {
-          hasUpdate: latestCommit !== localCommit,
+          hasUpdate: hasUpdate,
           currentVersion: localCommit,
-          latestVersion: latestCommit
+          latestVersion: trimmedLatest
         };
       } catch (e) {
         // No local version file means we need to download
+        console.log(`[Version Check] ${repoName}: No local version file found`);
         return {
           hasUpdate: true,
           currentVersion: null,
-          latestVersion: latestCommit
+          latestVersion: latestCommit.trim()
         };
       }
     } catch (error) {
@@ -195,7 +207,9 @@ class GitHubService {
   async saveVersionInfo(versionFile, commitSha) {
     try {
       await fs.mkdir(path.dirname(versionFile), { recursive: true });
-      await fs.writeFile(versionFile, commitSha, 'utf-8');
+      // Ensure we write trimmed SHA without extra whitespace
+      await fs.writeFile(versionFile, commitSha.trim(), 'utf-8');
+      console.log(`[Version] Saved ${commitSha.trim().substring(0, 8)} to ${path.basename(path.dirname(versionFile))}`);
     } catch (error) {
       console.error('Error saving version info:', error);
     }
