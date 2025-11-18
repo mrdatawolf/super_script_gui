@@ -5,45 +5,91 @@ A script to handle the common tasks with client computers
 .DESCRIPTION
 It will install the base applications we always want and will also uninstall the normal set as well as letting us do optional installed for Ops and Dev computers.
 
-.PARAMETER -o
-Install common applications for Ops.
+.PARAMETER InstallBaseApps
+Install base applications (Firefox, Chrome, Adobe Reader)
 
-.PARAMETER -d
-Install common applications for Dev.
+.PARAMETER InstallOptionalApps
+Install optional applications (SonicWall NetExtender, PowerShell)
 
-.PARAMETER --uninstall
-Uninstall common applications.
+.PARAMETER InstallOffice365
+Install Microsoft 365 (long download time)
 
-.PARAMETER --updates
-Update installed applications.
+.PARAMETER InstallDevApps
+Install developer applications (Git, VSCode, GitHub Desktop, OhMyPosh, NVM)
 
-.PARAMETER --nobase
-If set we will not install the base apps (like firefox).
+.PARAMETER UninstallWindowsApps
+Uninstall common bloatware Windows applications
 
-.PARAMETER --power
-Apply the power changes for hibernate etc.
+.PARAMETER UninstallDellApps
+Uninstall Dell-specific applications
+
+.PARAMETER UninstallHPApps
+Uninstall HP-specific applications
+
+.PARAMETER UninstallLenovoApps
+Uninstall Lenovo-specific applications
+
+.PARAMETER RunUpdates
+Update all installed applications
+
+.PARAMETER AdjustPowerSettings
+Configure power settings for maximum performance (disable hibernation, sleep, etc.)
+
+.PARAMETER EnablePublicDiscovery
+Enable network discovery and file sharing on public networks
+
+.PARAMETER EnableRemoteDesktop
+Enable Remote Desktop and install TightVNC
+
+.PARAMETER RemoveNewOutlook
+Remove and block the new Outlook app
 
 .EXAMPLE
-coreSetup -o
+coreSetup.ps1 -InstallBaseApps -InstallOptionalApps
 
 .EXAMPLE
-coreSetup --noauto --nobase
+coreSetup.ps1 -InstallDevApps -UninstallWindowsApps
 
 .NOTES
-Requires winget. Also you might need to run "Set-ExecutionPolicy Unrestricted" to use powershell scripts.
-
+Requires winget and administrator privileges. Run from Biztech Tools GUI or with elevated PowerShell.
+Patrick Moon - 2024
+Get the latest version at https://github.com/mrdatawolf/CoreSetup
 #>
+
+param(
+    [switch]$InstallBaseApps,
+    [switch]$InstallOptionalApps,
+    [switch]$InstallOffice365,
+    [switch]$InstallDevApps,
+    [switch]$UninstallWindowsApps,
+    [switch]$UninstallDellApps,
+    [switch]$UninstallHPApps,
+    [switch]$UninstallLenovoApps,
+    [switch]$RunUpdates,
+    [switch]$AdjustPowerSettings,
+    [switch]$EnablePublicDiscovery,
+    [switch]$EnableRemoteDesktop,
+    [switch]$RemoveNewOutlook
+)
+
+# Detect if running in GUI mode (any parameters provided)
+$guiMode = $InstallBaseApps -or $InstallOptionalApps -or $InstallOffice365 -or $InstallDevApps -or
+           $UninstallWindowsApps -or $UninstallDellApps -or $UninstallHPApps -or $UninstallLenovoApps -or
+           $RunUpdates -or $AdjustPowerSettings -or $EnablePublicDiscovery -or $EnableRemoteDesktop -or $RemoveNewOutlook
+
 # Check if we are running as administrator
 if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    # We are not running as administrator, so start a new process with 'RunAs'
-    Start-Process powershell.exe "-File", ($myinvocation.MyCommand.Definition) -Verb RunAs
-    exit
+    if ($guiMode) {
+        Write-Error "This script must be run with administrator privileges. Please run the GUI as administrator."
+        exit 1
+    } else {
+        # CLI mode - relaunch with elevation
+        Start-Process powershell.exe "-File", ($myinvocation.MyCommand.Definition) -Verb RunAs
+        exit
+    }
 }
-#Patrick Moon - 2024
-# Written by Patrick Moon
-# Tested and co-developed by Gabriel
-# Get the latest version at https://github.com/mrdatawolf/CoreSetup
-# List of applications ids to install. Note: install we use id to be specific, uninstall uses name
+
+# List of applications ids to install
 $apps = @("Mozilla.Firefox")
 $appsScopeRequired = @("Google.Chrome")
 $appThatNeedWingetSourceDeclared = @("Adobe Acrobat Reader DC")
@@ -52,50 +98,49 @@ $optionalAppsWithComplications = @("Microsoft 365")
 $devApps = @("git.git", "vscode", "github desktop", "JanDeDobbeleer.OhMyPosh", "nvm-windows")
 $remoteAccessApps = @("tightvnc")
 
-# List of applications names to uninstall. Note: uninstall uses name because the id cane change, install uses id
+# List of applications names to uninstall
 $appsToRemove = @(
-    "Game Bar", 
-    "LinkedIn", 
+    "Game Bar",
+    "LinkedIn",
     "McAfee Personal Security",
-    "Mail and Calendar", 
-    "Microsoft Family", 
+    "Mail and Calendar",
+    "Microsoft Family",
     "Movies & TV",
-    "MSN Weather", 
+    "MSN Weather",
     "News",
-    "Phone Link", 
-    "Skype", 
-    "Spotify Music", 
-    "xbox", 
-    "Xbox Game Speech Window", 
-    "Xbox Game Bar Plugin", 
-    "Xbox Identity Provider", 
+    "Phone Link",
+    "Skype",
+    "Spotify Music",
+    "xbox",
+    "Xbox Game Speech Window",
+    "Xbox Game Bar Plugin",
+    "Xbox Identity Provider",
     "Your Phone",
     "Xbox TCUI"
 )
 $dellAppsToRemove = @(
-    "Dell Command | Update for Windows Universal", 
-    "Dell Core Services", 
-    "Dell Core Services", 
-    "Dell Customer Connect"
-    "Dell Digital Delivery", 
-    "Dell Digital Delivery Services", 
+    "Dell Command | Update for Windows Universal",
+    "Dell Core Services",
+    "Dell Customer Connect",
+    "Dell Digital Delivery",
+    "Dell Digital Delivery Services",
     "Dell Display Manager",
     "Dell Display Manager 2.1",
     "Dell Display Manager 2.2",
     "Dell Display Manager 2.3",
-    "Dell Mobile Connect", 
+    "Dell Mobile Connect",
     "Dell Optimizer Core",
-    "Dell PremierColor", 
+    "Dell PremierColor",
     "{389E5E66-84BC-4CCF-B0D2-3887E9E2E271}",
     "{16AE9E0C-0E0C-4AD6-82B4-D0F8AB94082F}",
-    "Dell Peripheral Manager", 
-    "Dell SupportAssist", 
-    "Dell SupportAssist for Dell Update", 
-    "Dell SupportAssist for Home PCs", 
-    "Dell SupportAssist OS Recovery Plugin for Dell Update", 
-    "Dell SupportAssist Remediation", 
+    "Dell Peripheral Manager",
+    "Dell SupportAssist",
+    "Dell SupportAssist for Dell Update",
+    "Dell SupportAssist for Home PCs",
+    "Dell SupportAssist OS Recovery Plugin for Dell Update",
+    "Dell SupportAssist Remediation",
     "Dell Trusted Device Agent",
-    "{2F3E37A4-8F48-465A-813B-1F2964DBEB6A}", 
+    "{2F3E37A4-8F48-465A-813B-1F2964DBEB6A}",
     "Dell Watchdog Timer",
     "Power2Go for Dell",
     "PowerDirector for Dell",
@@ -125,7 +170,6 @@ $hpAppsToRemove = @(
     "HP Easy Clean",
     "HP PC Hardware Diagnostics Windows",
     "HP Privacy Settings",
-    "HP Support Assistant",
     "myHP",
     "Poly Lens"
 )
@@ -137,36 +181,27 @@ $lenovoAppsToRemove = @(
     "Lenovo Quick Clean",
     "Lenovo Migration Assistant"
 )
-$progressTitle = "Created by Patrick Moon. Version: $versionNumber"
 
-#show progress
-function OutputProgress {
-    Param
-    (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string] $Status,
-        [Parameter(Mandatory = $true, Position = 1)]
-        [int] $Progress
-    )
-    Write-Progress -Activity $progressTitle -Status $Status -PercentComplete $Progress
-}
+# Functions
 function Invoke-Sanity-Checks {
     # Check if the script is running in PowerShell
     if ($PSVersionTable.PSVersion.Major -lt 5) {
-        Write-Output "This script must be run in PowerShell. Please open PowerShell ISE and run the script again."
-        exit
+        Write-Output "This script must be run in PowerShell 5 or later."
+        exit 1
     }
 
     # Check if winget is installed
     try {
         $wingetCheck = Get-Command winget -ErrorAction Stop
-        Write-Host "Winget is installed so we can continue."  -ForegroundColor Green
+        Write-Host "✓ Winget is installed" -ForegroundColor Green
     }
     catch {
-        Write-Host "Winget is either not installed or had an error. This is complicated. Good luck! Hint: check if App Installer is updated in the windows store" -ForegroundColor Red
-        exit
+        Write-Host "✗ Winget is not installed or had an error." -ForegroundColor Red
+        Write-Host "  Please update 'App Installer' from the Microsoft Store" -ForegroundColor Yellow
+        exit 1
     }
 }
+
 function Install-App {
     param (
         [Parameter(Mandatory = $true)]
@@ -175,16 +210,17 @@ function Install-App {
         [string]$scope
     )
 
-    if ($source -and $scope) { 
-        winget install $app -s $source --scope $scope --silent 
+    if ($source -and $scope) {
+        winget install $app -s $source --scope $scope --silent --accept-package-agreements --accept-source-agreements
     }
-    elseif ($source) { 
-        winget install $app -s $source --silent 
+    elseif ($source) {
+        winget install $app -s $source --silent --accept-package-agreements --accept-source-agreements
     }
-    else { 
-        winget install $app --silent 
+    else {
+        winget install $app --silent --accept-package-agreements --accept-source-agreements
     }
 }
+
 function Install-Apps {
     param (
         [Parameter(Mandatory = $true)]
@@ -196,22 +232,25 @@ function Install-Apps {
     $totalApps = $apps.Count
     for ($i = 0; $i -lt $totalApps; $i++) {
         $app = $apps[$i]
-        Write-Progress -Activity "Installing applications - $app" -Status "$([Math]::Floor((($i + 1) / $totalApps) * 100))% Complete:" -PercentComplete ([Math]::Floor((($i + 1) / $totalApps) * 100))
-        $wingetList = winget list --id $app
+        $percentComplete = [Math]::Floor((($i + 1) / $totalApps) * 100)
+        Write-Host "[$percentComplete%] Installing $app..." -ForegroundColor Cyan
+
+        $wingetList = winget list --id $app 2>$null
         if ($LASTEXITCODE -eq 0) {
-            Write-Host " $app already installed"  -ForegroundColor Cyan
+            Write-Host "  ✓ $app already installed" -ForegroundColor Green
         }
         else {
             Install-App -app $app -source $source -scope $scope
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "$app installed" -ForegroundColor Green
+                Write-Host "  ✓ $app installed successfully" -ForegroundColor Green
             }
             else {
-                Write-Host "$app failed to install" -ForegroundColor Red
+                Write-Host "  ✗ $app failed to install" -ForegroundColor Red
             }
         }
     }
 }
+
 function Uninstall-Apps {
     param (
         [Parameter(Mandatory = $true)]
@@ -219,35 +258,38 @@ function Uninstall-Apps {
     )
 
     $totalApps = $apps.Count
-    $percentComplete = 0
     for ($i = 0; $i -lt $totalApps; $i++) {
         $app = $apps[$i]
-        Write-Progress -Activity "Uninstalling applications - $app" -Status "$percentComplete% Complete:" -PercentComplete $percentComplete
+        $percentComplete = [Math]::Floor((($i + 1) / $totalApps) * 100)
+        Write-Host "[$percentComplete%] Checking $app..." -ForegroundColor Cyan
+
         # Check if the application is installed
-        $wingetList = winget list --name $app
+        $wingetList = winget list --name $app 2>$null
         if ($LASTEXITCODE -eq 0) {
-            $wingetUninstall = winget uninstall $app --silent
-            $percentComplete = [Math]::Floor((($i + 1) / $totalApps) * 100)
+            Write-Host "  Uninstalling $app..." -ForegroundColor Yellow
+            winget uninstall $app --silent 2>$null
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "$app uninstalled" -ForegroundColor Green
+                Write-Host "  ✓ $app uninstalled" -ForegroundColor Green
             }
             else {
-                Write-Host "$app failed to uninstall" -ForegroundColor Cyan
+                Write-Host "  ~ $app uninstall attempted (may require manual removal)" -ForegroundColor Yellow
             }
         }
         else {
-            $percentComplete = [Math]::Floor((($i + 1) / $totalApps) * 100)
-            Write-Host "$app not installed" -ForegroundColor Cyan
+            Write-Host "  - $app not installed (skipping)" -ForegroundColor Gray
         }
     }
 }
+
 function RunUpdates {
-    Write-Progress -Activity "Getting the most current source list"
+    Write-Host "Updating winget sources..." -ForegroundColor Cyan
     winget source update
-    Write-Progress -Activity "Updating the applications"
-    winget update --all --silent
+    Write-Host "Updating all installed applications..." -ForegroundColor Cyan
+    winget update --all --silent --accept-package-agreements --accept-source-agreements
 }
+
 function PowerSetup {
+    Write-Host "Configuring power settings for maximum performance..." -ForegroundColor Cyan
     powercfg.exe -x -monitor-timeout-ac 0
     powercfg.exe -x -monitor-timeout-dc 0
     powercfg.exe -x -disk-timeout-ac 0
@@ -257,290 +299,197 @@ function PowerSetup {
     powercfg.exe -x -hibernate-timeout-ac 0
     powercfg.exe -x -hibernate-timeout-dc 0
     powercfg.exe -h off
+    Write-Host "  ✓ Power settings configured" -ForegroundColor Green
 }
+
 function DoPublicDiscovery {
+    Write-Host "Enabling network discovery on public networks..." -ForegroundColor Cyan
     Set-NetFirewallRule -DisplayGroup "Network Discovery" -Enabled True -Profile Public
     Set-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -Profile Public
+    Write-Host "  ✓ Public network discovery enabled" -ForegroundColor Green
 }
+
 function DoRemoteDesktop {
+    Write-Host "Enabling Remote Desktop..." -ForegroundColor Cyan
     Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
     Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    Write-Host "  ✓ Remote Desktop enabled" -ForegroundColor Green
+    Write-Host "Installing remote access tools..." -ForegroundColor Cyan
     Install-Apps -apps $remoteAccessApps
 }
 
 function RemoveAndBlockNewOutlook {
+    Write-Host "Removing and blocking new Outlook..." -ForegroundColor Cyan
+
     # Path to the registry key
     $regPath = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\Orchestrator\UScheduler_Oobe"
-    
+
     # Create the registry key if it doesn't exist
     if (-not (Test-Path $regPath)) {
-        New-Item -Path $regPath -Force
+        New-Item -Path $regPath -Force | Out-Null
     }
-    
+
     # Set the registry value to block new Outlook
     $propertyName = "BlockedOobeUpdaters"
     $propertyValue = "MS_Outlook"
-    
+
     try {
-        # Attempt to set the property
         Set-ItemProperty -Path $regPath -Name $propertyName -Value $propertyValue
     } catch {
-        # If the property doesn't exist, create it
-        New-ItemProperty -Path $regPath -Name $propertyName -Value $propertyValue -PropertyType String -Force
+        New-ItemProperty -Path $regPath -Name $propertyName -Value $propertyValue -PropertyType String -Force | Out-Null
     }
-    
+
     # Remove the new Outlook app if it's already installed
     $outlookPackage = Get-AppxPackage -Name "Microsoft.OutlookForWindows"
     if ($outlookPackage) {
-        Remove-AppxProvisionedPackage -AllUsers -Online -PackageName $outlookPackage.PackageFullName
+        Remove-AppxProvisionedPackage -AllUsers -Online -PackageName $outlookPackage.PackageFullName | Out-Null
+        Write-Host "  ✓ New Outlook removed and blocked" -ForegroundColor Green
+    } else {
+        Write-Host "  ✓ New Outlook blocked (was not installed)" -ForegroundColor Green
     }
 }
 
+# ============================================
+# Main Execution
+# ============================================
 
-#check that we have current winget sources
-Write-Host "updating winget sources"
-winget source update
+Write-Host "==============================" -ForegroundColor Cyan
+Write-Host "  Core Setup Script" -ForegroundColor Cyan
+Write-Host "==============================" -ForegroundColor Cyan
+Write-Host ""
 
-# Display title line
-Write-Host "==============================" -ForegroundColor Cyan
-Write-Host "Core Setup Script" -ForegroundColor Cyan
-Write-Host "==============================" -ForegroundColor Cyan
+# Run sanity checks
 Invoke-Sanity-Checks
-if ($args -contains "--noauto") {
-    Write-Host "Skipping base installs" -ForegroundColor Cyan
-}
 
-#see what the user wants to run
-#Check if they want to do the main apps
-$appsInstall = $true
-$optionalInstall = $false
-$optionalExtendedInstall = $false
-if ($args -contains "--basic") {
-    $appsInstall = $true
-}
-else {
-    Write-Host "Do you want to install the following programs?"
-    for ($i = 0; $i -lt $apps.Length; $i++) {
-        Write-Host "$i. $($apps[$i])"
-    }
-    for ($i = 0; $i -lt $appThatNeedWingetSourceDeclared.Length; $i++) {
-        Write-Host "$i. $($appThatNeedWingetSourceDeclared[$i])"
-    }
-    for ($i = 0; $i -lt $appsScopeRequired.Length; $i++) {
-        Write-Host "$i. $($appsScopeRequired[$i])"
-    }
-    $userInput = Read-Host " (Y/n)" 
-    if ($userInput -eq "n") {
-        $appsInstall = $false
-    }
-}
-if ($args -contains "-o") {
-    $optionalInstall = $true
-}
-else {
-    Write-Host "Do you want to install the following optional programs?"
-    for ($i = 0; $i -lt $optionalApps.Length; $i++) {
-        Write-Host "$i. $($optionalApps[$i])"
-    }
-    $userInput = Read-Host " (y/N)" 
-    if ($userInput -eq "y") {
-        $optionalInstall = $true
+# Update winget sources
+Write-Host "Updating winget sources..." -ForegroundColor Cyan
+winget source update 2>$null
+Write-Host ""
 
-        $userInput = Read-Host "Do you want to install programs that might take a long time to download (office365)? (y/N)"
-        if ($userInput -eq "y") {
-            $optionalExtendedInstall = $true
-        }
-    }
-}
-$devInstall = $false
-if ($args -contains "-d") {
-    $devInstall = $true
-}
-else {
-    Write-Host "Do you want to install the following developer programs?"
-    for ($i = 0; $i -lt $devApps.Length; $i++) {
-        Write-Host "$i. $($devApps[$i])"
-    }
-    $userInput = Read-Host "(y/N)"
-    if ($userInput -eq "y") {
-        $devInstall = $true
-    }
-}
-$uninstall = $false
-if ($args -contains "--uninstalls") {
-    $uninstall = $true
-    $uninstallCommonApps = $true
-    $uninstallLenovoApps = $true
-    $uninstallDellApps = $true
-    $uninstallHpApps = $true
-}
-else {
-    Write-Host "Do you want to uninstall common Windows applications?"
-    for ($i = 0; $i -lt $appsToRemove.Length; $i++) {
-        Write-Host "$i. $($appsToRemove[$i])" -ForegroundColor Red
-    }
-    $userInput = Read-Host "(y/N)"
-    if ($userInput -eq "y") {
-        $uninstall = $true
-        $uninstallCommonApps = $true
-    }
+# Track if anything was selected
+$operationsRun = 0
 
-    Write-Host "Do you want to uninstall Dell applications?"
-    for ($i = 0; $i -lt $dellAppsToRemove.Length; $i++) {
-        Write-Host "$i. $($dellAppsToRemove[$i])" -ForegroundColor Red
-    }
-    $userInput = Read-Host "(y/N)"
-    if ($userInput -eq "y") {
-        $uninstall = $true
-        $uninstallDellApps = $true
-    }
-
-    Write-Host "Do you want to uninstall HP applications?"
-    for ($i = 0; $i -lt $hpAppsToRemove.Length; $i++) {
-        Write-Host "$i. $($hpAppsToRemove[$i])" -ForegroundColor Red
-    }
-    $userInput = Read-Host "(y/N)"
-    if ($userInput -eq "y") {
-        $uninstall = $true
-        $uninstallHpApps = $true
-    }
-
-    Write-Host "Do you want to uninstall Lenovo applications?"
-    for ($i = 0; $i -lt $lenovoAppsToRemove.Length; $i++) {
-        Write-Host "$i. $($lenovoAppsToRemove[$i])" -ForegroundColor Red
-    }
-    $userInput = Read-Host "(y/N)"
-    if ($userInput -eq "y") {
-        $uninstall = $true
-        $uninstallLenovoApps = $true
-    }
-}
-$updates = $false
-if ($args -contains "--updates") {
-    $updates = $true
-}
-else {
-    $userInput = Read-Host "Do you want to run updates for installed programs? (y/N)"
-    if ($userInput -eq "y") {
-        $updates = $true
-    }
-}
-$powerAdjust = $false
-if ($args -contains "--power") {
-    $powerAdjust = $true
-} else {
-    Write-Host "Do you want to power settings for maximum performance?"
-    $userInput = Read-Host "(y/N)"
-    if ($userInput -eq "y") {
-        $powerAdjust = $true
-    }
-}
-$allowPublicDiscovery = $false
-if ($args -contains "--public") {
-    $allowPublicDiscovery = $true
-    
-} else {
-    Write-Host "Do you want to the computer to be discoverable on public networks?"
-    $publicDiscoveryInput = Read-Host "(y/N)"
-    if($publicDiscoveryInput -eq "y") {
-        $allowPublicDiscovery = $true
-    }
-}
-$allowRemoteDesktop = $false
-if ($args -contains "--remote") {
-    $allowRemoteDesktop = $true
-    
-} else {
-    Write-Host "Do you want to the computer to enable remote desktop and install vnc?"
-    $remoteDesktopInput = Read-Host "(y/N)"
-    if($remoteDesktopInput -eq "y") {
-        $allowRemoteDesktop = $true
-    }
-}
-$allowRemoveAndBlockNewOutlook = $false
-if ($args -contains "--remove-new-outlook") {
-    $allowRemoveAndBlockNewOutlook = $true
-} else {
-    Write-Host "Do you want to remove and block new outlook?"
-    $removeNewOutlookInput = Read-Host "(y/N)"
-    if($removeNewOutlookInput -eq "y") {
-        $allowRemoveAndBlockNewOutlook = $true
-    }
-}
-if ($appsInstall) {
-    Write-Host "Installing base applications... (if it pauses for a long time press y and then enter)"
+# Install base applications
+if ($InstallBaseApps) {
+    $operationsRun++
+    Write-Host "=== Installing Base Applications ===" -ForegroundColor Yellow
     Install-Apps -apps $apps
-    Write-Host "Done Installing base applications!"
-    Write-Host "Installing base applications with special needs."
+    Write-Host "Installing apps requiring MS Store source..." -ForegroundColor Cyan
     Install-Apps -apps $appThatNeedWingetSourceDeclared -source "msstore"
-    Write-Host "Done installing base applications with special needs."
-    Write-Host "Installing base applications that require scope declaration."
+    Write-Host "Installing apps requiring machine scope..." -ForegroundColor Cyan
     Install-Apps -apps $appsScopeRequired -source "winget" -scope "machine"
-    Write-Host "Done installing base applications that require scope declaration."
+    Write-Host ""
 }
-else {
-    Write-Host "Skipping base applications" -ForegroundColor Cyan
-}
-if ($optionalInstall) {
-    Write-Output "Installing optional applications..."
+
+# Install optional applications
+if ($InstallOptionalApps) {
+    $operationsRun++
+    Write-Host "=== Installing Optional Applications ===" -ForegroundColor Yellow
     Install-Apps -apps $optionalApps
-    Write-Output "Done installing optional applications!"
+    Write-Host ""
 }
-if ($optionalExtendedInstall) {
-    Write-Output "Installing other optional applications..."
+
+# Install Office 365
+if ($InstallOffice365) {
+    $operationsRun++
+    Write-Host "=== Installing Microsoft 365 ===" -ForegroundColor Yellow
+    Write-Host "Warning: This may take a long time to download" -ForegroundColor Yellow
     Install-Apps -apps $optionalAppsWithComplications
-    Write-Output "Done installing other optional applications!"
+    Write-Host ""
 }
-if ($devInstall) {
-    Write-Output "Installing Developer Applications..."
+
+# Install developer applications
+if ($InstallDevApps) {
+    $operationsRun++
+    Write-Host "=== Installing Developer Applications ===" -ForegroundColor Yellow
     Install-Apps -apps $devApps -source "winget"
-    Write-Output "Done installing developer applications!"
+    Write-Host ""
 }
-if ($uninstall) {
-    if ($uninstallCommonApps) {
-        Write-Output "Uninstalling general applications..."
-        Uninstall-Apps -apps $appsToRemove
-        Write-Output "Done uninstalling general applications!"
-    }
-    if ($uninstallDellApps) {
-        Write-Output "Uninstalling Dell specific applications..."
-        Uninstall-Apps -apps $dellAppsToRemove
-        Write-Output "Done uninstalling Dell applications!"
-    }
-    if ($uninstallHpApps) {
-        Write-Output "Uninstalling HP specific applications..."
-        Uninstall-Apps -apps $hpAppsToRemove
-        Write-Output "Done uninstalling HP applications!"
-    }
-    if ($uninstallLenovoApps) {
-        Write-Output "Uninstalling Lenovo specific applications..."
-        Uninstall-Apps -apps $lenovoAppsToRemove
-        Write-Output "Done uninstalling Lenovo applications!"
-    }
+
+# Uninstall Windows bloatware
+if ($UninstallWindowsApps) {
+    $operationsRun++
+    Write-Host "=== Uninstalling Windows Bloatware ===" -ForegroundColor Yellow
+    Uninstall-Apps -apps $appsToRemove
+    Write-Host ""
 }
-if ($updates) {
-    Write-Output "Updating installed applications..."
+
+# Uninstall Dell apps
+if ($UninstallDellApps) {
+    $operationsRun++
+    Write-Host "=== Uninstalling Dell Applications ===" -ForegroundColor Yellow
+    Uninstall-Apps -apps $dellAppsToRemove
+    Write-Host ""
+}
+
+# Uninstall HP apps
+if ($UninstallHPApps) {
+    $operationsRun++
+    Write-Host "=== Uninstalling HP Applications ===" -ForegroundColor Yellow
+    Uninstall-Apps -apps $hpAppsToRemove
+    Write-Host ""
+}
+
+# Uninstall Lenovo apps
+if ($UninstallLenovoApps) {
+    $operationsRun++
+    Write-Host "=== Uninstalling Lenovo Applications ===" -ForegroundColor Yellow
+    Uninstall-Apps -apps $lenovoAppsToRemove
+    Write-Host ""
+}
+
+# Run updates
+if ($RunUpdates) {
+    $operationsRun++
+    Write-Host "=== Updating Installed Applications ===" -ForegroundColor Yellow
     RunUpdates
-    Write-Output "Done updating installed applications!"
+    Write-Host ""
 }
 
-if ($powerAdjust) {
-    Write-Output "Updating power settings..."
+# Adjust power settings
+if ($AdjustPowerSettings) {
+    $operationsRun++
+    Write-Host "=== Adjusting Power Settings ===" -ForegroundColor Yellow
     PowerSetup
-    Write-Output "Done updating power settings!"
+    Write-Host ""
 }
 
-if ($allowPublicDiscovery) {
-   DoPublicDiscovery
+# Enable public discovery
+if ($EnablePublicDiscovery) {
+    $operationsRun++
+    Write-Host "=== Enabling Public Network Discovery ===" -ForegroundColor Yellow
+    DoPublicDiscovery
+    Write-Host ""
 }
 
-if ($allowRemoteDesktop) {
+# Enable remote desktop
+if ($EnableRemoteDesktop) {
+    $operationsRun++
+    Write-Host "=== Enabling Remote Desktop ===" -ForegroundColor Yellow
     DoRemoteDesktop
+    Write-Host ""
 }
 
-if ($allowRemoveAndBlockNewOutlook) {
+# Remove and block new Outlook
+if ($RemoveNewOutlook) {
+    $operationsRun++
+    Write-Host "=== Removing and Blocking New Outlook ===" -ForegroundColor Yellow
     RemoveAndBlockNewOutlook
+    Write-Host ""
 }
 
-Write-Host "Completed" -ForegroundColor Cyan
-Pause
+# Summary
+Write-Host "==============================" -ForegroundColor Cyan
+if ($operationsRun -gt 0) {
+    Write-Host "✓ Completed $operationsRun operation(s)" -ForegroundColor Green
+} else {
+    Write-Host "No operations selected" -ForegroundColor Yellow
+}
+Write-Host "==============================" -ForegroundColor Cyan
+
+# Exit cleanly (no pause in GUI mode)
+if (-not $guiMode) {
+    Pause
+}
+
+exit 0

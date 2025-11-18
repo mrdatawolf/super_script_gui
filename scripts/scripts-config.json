@@ -4,22 +4,100 @@
       "name": "Core Setup",
       "repo": "CoreSetup",
       "file": "coreSetup.ps1",
-      "description": "Set of processes for a new system setup. Installs essential software using winget and configures system settings.",
+      "description": "Complete system setup automation - installs essential software, removes bloatware, and configures system settings. Select options below.",
       "githubUrl": "https://github.com/mrdatawolf/CoreSetup",
+      "requiresAdmin": true,
       "parameters": [
         {
-          "name": "SkipWindowsUpdates",
-          "label": "Skip Windows Updates",
+          "name": "InstallBaseApps",
+          "label": "Install Base Applications",
           "type": "switch",
-          "default": false,
-          "description": "Skip checking and installing Windows updates"
+          "default": true,
+          "description": "Install Firefox, Chrome, and Adobe Reader"
         },
         {
-          "name": "SkipSoftwareInstall",
-          "label": "Skip Software Installation",
+          "name": "InstallOptionalApps",
+          "label": "Install Optional Apps",
           "type": "switch",
           "default": false,
-          "description": "Skip automatic software installation"
+          "description": "Install SonicWall NetExtender and PowerShell 7"
+        },
+        {
+          "name": "InstallOffice365",
+          "label": "Install Microsoft 365",
+          "type": "switch",
+          "default": false,
+          "description": "Install Microsoft 365 (WARNING: Large download, may take a long time)"
+        },
+        {
+          "name": "InstallDevApps",
+          "label": "Install Developer Tools",
+          "type": "switch",
+          "default": false,
+          "description": "Install Git, VSCode, GitHub Desktop, Oh My Posh, and NVM"
+        },
+        {
+          "name": "UninstallWindowsApps",
+          "label": "Remove Windows Bloatware",
+          "type": "switch",
+          "default": true,
+          "description": "Uninstall Xbox, LinkedIn, Spotify, and other pre-installed apps"
+        },
+        {
+          "name": "UninstallDellApps",
+          "label": "Remove Dell Applications",
+          "type": "switch",
+          "default": false,
+          "description": "Uninstall Dell SupportAssist, Dell Update, and other Dell software"
+        },
+        {
+          "name": "UninstallHPApps",
+          "label": "Remove HP Applications",
+          "type": "switch",
+          "default": false,
+          "description": "Uninstall HP Support Assistant, HP Wolf Security, and other HP software"
+        },
+        {
+          "name": "UninstallLenovoApps",
+          "label": "Remove Lenovo Applications",
+          "type": "switch",
+          "default": false,
+          "description": "Uninstall Lenovo Vantage and other Lenovo software"
+        },
+        {
+          "name": "RunUpdates",
+          "label": "Update All Applications",
+          "type": "switch",
+          "default": true,
+          "description": "Run winget update to update all installed applications"
+        },
+        {
+          "name": "AdjustPowerSettings",
+          "label": "Optimize Power Settings",
+          "type": "switch",
+          "default": true,
+          "description": "Configure for maximum performance (disable sleep, hibernation, etc.)"
+        },
+        {
+          "name": "EnablePublicDiscovery",
+          "label": "Enable Network Discovery",
+          "type": "switch",
+          "default": true,
+          "description": "Enable network discovery and file sharing on public networks"
+        },
+        {
+          "name": "EnableRemoteDesktop",
+          "label": "Enable Remote Access",
+          "type": "switch",
+          "default": false,
+          "description": "Enable Remote Desktop and install TightVNC"
+        },
+        {
+          "name": "RemoveNewOutlook",
+          "label": "Block New Outlook",
+          "type": "switch",
+          "default": true,
+          "description": "Remove and block the new Outlook app from being installed"
         }
       ]
     },
