@@ -148,43 +148,79 @@ async function selectScript(script) {
 
   // Clear output
   clearOutput();
-
-  // Check for updates in the background (don't await - let it run async)
-  checkForScriptUpdates(script);
 }
 
-// Check for script updates in the background
-async function checkForScriptUpdates(script) {
+// Check all scripts for updates
+async function checkAllScriptsForUpdates() {
+  const checkUpdatesBtn = document.getElementById('checkUpdatesToggle');
+
   try {
-    const updateResult = await window.electronAPI.checkUpdates(script);
+    // Add checking animation
+    checkUpdatesBtn.classList.add('checking');
+    checkUpdatesBtn.disabled = true;
 
-    if (updateResult.hasUpdate) {
-      // Show update notification
-      const updateMessage = `A newer version of "${script.name}" is available.\n\nWould you like to download and use the latest version?`;
+    // Get all scripts
+    const scriptsData = await window.electronAPI.getScripts();
+    const scripts = scriptsData.scripts || [];
 
-      if (confirm(updateMessage)) {
-        // User wants to update
-        appendOutput({ type: 'stdout', data: `📥 Downloading latest version of ${script.name}...\n` });
+    // Filter scripts with repos (can be updated)
+    const updatableScripts = scripts.filter(s => s.repo);
 
-        const downloadResult = await window.electronAPI.downloadScript(script);
+    if (updatableScripts.length === 0) {
+      alert('No updatable scripts found.');
+      return;
+    }
 
-        if (downloadResult.success) {
-          appendOutput({ type: 'stdout', data: `✅ Successfully updated to latest version!\n` });
-          // Show success message
-          scriptBadge.textContent = 'Updated!';
-          scriptBadge.style.backgroundColor = '#10b981';
-          setTimeout(() => {
-            scriptBadge.textContent = 'PowerShell';
-            scriptBadge.style.backgroundColor = '';
-          }, 3000);
-        } else {
-          appendOutput({ type: 'stderr', data: `❌ Failed to download update: ${downloadResult.message}\n` });
+    // Check each script for updates
+    const results = [];
+    for (const script of updatableScripts) {
+      try {
+        const updateResult = await window.electronAPI.checkUpdates(script);
+        if (updateResult.hasUpdate) {
+          results.push({ script, updateResult });
         }
+      } catch (error) {
+        console.error(`Failed to check ${script.name}:`, error);
+      }
+    }
+
+    // Remove checking animation
+    checkUpdatesBtn.classList.remove('checking');
+
+    if (results.length === 0) {
+      alert('All scripts are up to date!');
+      checkUpdatesBtn.classList.remove('has-updates');
+    } else {
+      // Show which scripts have updates
+      checkUpdatesBtn.classList.add('has-updates');
+
+      const updateList = results.map(r => `• ${r.script.name}`).join('\n');
+      const message = `Updates available for ${results.length} script${results.length > 1 ? 's' : ''}:\n\n${updateList}\n\nWould you like to download all updates now?`;
+
+      if (confirm(message)) {
+        // Download all updates
+        let successCount = 0;
+        for (const { script } of results) {
+          try {
+            const downloadResult = await window.electronAPI.downloadScript(script);
+            if (downloadResult.success) {
+              successCount++;
+            }
+          } catch (error) {
+            console.error(`Failed to download ${script.name}:`, error);
+          }
+        }
+
+        alert(`Successfully updated ${successCount} of ${results.length} script${results.length > 1 ? 's' : ''}!`);
+        checkUpdatesBtn.classList.remove('has-updates');
       }
     }
   } catch (error) {
-    // Silently fail - don't interrupt user workflow
     console.error('Update check failed:', error);
+    alert('Failed to check for updates. Please try again later.');
+  } finally {
+    checkUpdatesBtn.classList.remove('checking');
+    checkUpdatesBtn.disabled = false;
   }
 }
 
@@ -587,6 +623,14 @@ if (toolsListToggle && toolsListView) {
       toolsListToggle.classList.add('active');
       toolsListToggle.title = 'Back to Scripts';
     }
+  });
+}
+
+// Check Updates toggle functionality
+const checkUpdatesToggle = document.getElementById('checkUpdatesToggle');
+if (checkUpdatesToggle) {
+  checkUpdatesToggle.addEventListener('click', () => {
+    checkAllScriptsForUpdates();
   });
 }
 
