@@ -1,3 +1,6 @@
+// Load environment variables from .env file (for GitHub token)
+require('dotenv').config();
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');

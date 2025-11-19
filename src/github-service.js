@@ -6,6 +6,14 @@ class GitHubService {
   constructor() {
     this.owner = 'mrdatawolf';
     this.baseUrl = 'api.github.com';
+    // Optional GitHub token for authenticated requests (5000/hour vs 60/hour)
+    // Set via GITHUB_TOKEN environment variable
+    this.token = process.env.GITHUB_TOKEN || null;
+    if (this.token) {
+      console.log('[GitHub] Using authenticated requests (5000/hour rate limit)');
+    } else {
+      console.log('[GitHub] Using unauthenticated requests (60/hour rate limit)');
+    }
   }
 
   /**
@@ -13,14 +21,21 @@ class GitHubService {
    */
   async makeRequest(url) {
     return new Promise((resolve, reject) => {
+      const headers = {
+        'User-Agent': 'SuperScriptGUI',
+        'Accept': 'application/vnd.github.v3+json'
+      };
+
+      // Add authentication if token is available
+      if (this.token) {
+        headers['Authorization'] = `token ${this.token}`;
+      }
+
       const options = {
         hostname: this.baseUrl,
         path: url,
         method: 'GET',
-        headers: {
-          'User-Agent': 'SuperScriptGUI',
-          'Accept': 'application/vnd.github.v3+json'
-        }
+        headers: headers
       };
 
       const req = https.request(options, (res) => {
@@ -80,11 +95,16 @@ class GitHubService {
 
       throw new Error('No content in response');
     } catch (error) {
-      // Try master branch if main fails
-      if (branch === 'main') {
+      // Try master branch if main fails (but not for rate limit errors)
+      if (branch === 'main' && !error.message.includes('rate limit')) {
         return await this.getFileContent(repoName, filePath, 'master');
       }
-      console.error(`Error fetching file content from ${repoName}/${filePath}:`, error);
+      // Don't log rate limit errors at error level (they're expected)
+      if (error.message.includes('rate limit')) {
+        console.log(`[Download] GitHub API rate limited - please wait before retrying`);
+      } else {
+        console.error(`Error fetching file content from ${repoName}/${filePath}:`, error);
+      }
       throw error;
     }
   }
@@ -110,18 +130,23 @@ class GitHubService {
 
       for (const testPath of possiblePaths) {
         try {
+          console.log(`[Download] Trying path: ${testPath}`);
           content = await this.getFileContent(repoName, testPath);
           foundPath = testPath;
           console.log(`[Download] Found script at: ${testPath}`);
           break;
         } catch (e) {
+          // Log the error for debugging
+          console.log(`[Download] Path ${testPath} failed: ${e.message}`);
           // Continue trying other paths
           continue;
         }
       }
 
       if (!content) {
-        throw new Error(`Could not find script file in repository ${repoName}`);
+        // Check if all attempts failed due to rate limiting
+        const errorMsg = `Could not download ${repoName}. This may be due to GitHub API rate limiting. Please try again in a few minutes, or Tried paths: ${possiblePaths.join(', ')}`;
+        throw new Error(errorMsg);
       }
 
       // Ensure destination directory exists
