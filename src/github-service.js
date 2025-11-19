@@ -94,6 +94,9 @@ class GitHubService {
    */
   async downloadScript(repoName, fileName, destinationPath) {
     try {
+      console.log(`[Download] Starting download for ${repoName}/${fileName}`);
+      console.log(`[Download] Destination: ${destinationPath}`);
+
       // Try common PowerShell script locations
       const possiblePaths = [
         fileName,
@@ -109,6 +112,7 @@ class GitHubService {
         try {
           content = await this.getFileContent(repoName, testPath);
           foundPath = testPath;
+          console.log(`[Download] Found script at: ${testPath}`);
           break;
         } catch (e) {
           // Continue trying other paths
@@ -121,18 +125,24 @@ class GitHubService {
       }
 
       // Ensure destination directory exists
-      await fs.mkdir(path.dirname(destinationPath), { recursive: true });
+      const destDir = path.dirname(destinationPath);
+      console.log(`[Download] Creating directory: ${destDir}`);
+      await fs.mkdir(destDir, { recursive: true });
 
       // Write file
+      console.log(`[Download] Writing file to: ${destinationPath}`);
       await fs.writeFile(destinationPath, content, 'utf-8');
 
+      console.log(`[Download] Successfully downloaded ${repoName}`);
       return {
         success: true,
         path: destinationPath,
         foundPath: foundPath
       };
     } catch (error) {
-      console.error(`Error downloading script from ${repoName}:`, error);
+      console.error(`[Download] Error downloading script from ${repoName}:`, error);
+      console.error(`[Download] Error code: ${error.code}`);
+      console.error(`[Download] Error path: ${error.path}`);
       throw error;
     }
   }

@@ -53,9 +53,9 @@ ipcMain.handle('get-scripts', async () => {
     // Handle both development and production paths
     let configPath;
     if (app.isPackaged) {
-      // Production: use app.asar.unpacked path
-      const asarUnpackedPath = __dirname.replace('app.asar', 'app.asar.unpacked');
-      configPath = path.join(asarUnpackedPath, '../scripts/scripts-config.json');
+      // Production: use extraResources path (consistent with execute and download)
+      const resourcesPath = process.resourcesPath;
+      configPath = path.join(resourcesPath, 'scripts/scripts-config.json');
     } else {
       // Development: use regular path
       configPath = path.join(__dirname, '../scripts/scripts-config.json');
@@ -126,12 +126,11 @@ const cleanPowerShellOutput = (text) => {
 ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
   return new Promise((resolve, reject) => {
     // Handle both development and production paths
-    // In production, scripts are unpacked from asar to app.asar.unpacked
     let scriptPath;
     if (app.isPackaged) {
-      // Production: use app.asar.unpacked path
-      const asarUnpackedPath = __dirname.replace('app.asar', 'app.asar.unpacked');
-      scriptPath = path.join(asarUnpackedPath, '../scripts/bundled', scriptInfo.repo, scriptInfo.file);
+      // Production: use extraResources path (same location as downloads)
+      const resourcesPath = process.resourcesPath;
+      scriptPath = path.join(resourcesPath, 'scripts/bundled', scriptInfo.repo, scriptInfo.file);
     } else {
       // Development: use regular path
       scriptPath = path.join(__dirname, '../scripts/bundled', scriptInfo.repo, scriptInfo.file);
@@ -488,7 +487,17 @@ ipcMain.handle('check-updates', async (event, scriptInfo) => {
       return versionCheckCache.get(cacheKey);
     }
 
-    const versionFile = path.join(__dirname, '../scripts/bundled', scriptInfo.repo, '.version');
+    // Handle both development and production paths
+    let versionFile;
+    if (app.isPackaged) {
+      // Production: use extraResources path
+      const resourcesPath = process.resourcesPath;
+      versionFile = path.join(resourcesPath, 'scripts/bundled', scriptInfo.repo, '.version');
+    } else {
+      // Development: use regular path
+      versionFile = path.join(__dirname, '../scripts/bundled', scriptInfo.repo, '.version');
+    }
+
     const result = await githubService.checkForUpdates(scriptInfo.repo, versionFile);
 
     // Cache the result for this session
@@ -504,9 +513,22 @@ ipcMain.handle('check-updates', async (event, scriptInfo) => {
 // Download script from GitHub
 ipcMain.handle('download-script', async (event, scriptInfo) => {
   try {
-    const scriptDir = path.join(__dirname, '../scripts/bundled', scriptInfo.repo);
+    console.log(`[Download Handler] Script info:`, scriptInfo);
+
+    // Handle both development and production paths
+    let scriptDir;
+    if (app.isPackaged) {
+      // Production: write to extraResources (writable location outside asar)
+      const resourcesPath = process.resourcesPath;
+      scriptDir = path.join(resourcesPath, 'scripts/bundled', scriptInfo.repo);
+    } else {
+      // Development: use regular path
+      scriptDir = path.join(__dirname, '../scripts/bundled', scriptInfo.repo);
+    }
+
     const scriptPath = path.join(scriptDir, scriptInfo.file);
     const versionFile = path.join(scriptDir, '.version');
+    console.log(`[Download Handler] Paths: dir=${scriptDir}, file=${scriptPath}`);
 
     // Download script
     const result = await githubService.downloadScript(scriptInfo.repo, scriptInfo.file, scriptPath);
