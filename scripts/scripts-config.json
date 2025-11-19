@@ -460,6 +460,43 @@
           "description": "Show detailed tunnel information grouped by status"
         }
       ]
+    },
+    {
+      "name": "Windows Update Security",
+      "repo": "WPFUpdatessecurity",
+      "file": "Invoke-WPFUpdatessecurity.ps1",
+      "description": "Configure Windows Update to recommended security settings. Select which settings to apply below. Based on ChrisTitusTech's WinUtil.",
+      "requiresAdmin": true,
+      "parameters": [
+        {
+          "name": "DisableDriverUpdates",
+          "label": "Disable Driver Updates",
+          "type": "switch",
+          "default": false,
+          "description": "Prevent Windows from automatically downloading and installing driver updates"
+        },
+        {
+          "name": "DisableAutoRestart",
+          "label": "Disable Automatic Restart",
+          "type": "switch",
+          "default": false,
+          "description": "Prevent Windows from automatically restarting after updates while users are logged on"
+        },
+        {
+          "name": "DeferFeatureUpdates",
+          "label": "Defer Feature Updates (365 days)",
+          "type": "switch",
+          "default": false,
+          "description": "Delay major Windows feature updates for one year"
+        },
+        {
+          "name": "DeferQualityUpdates",
+          "label": "Defer Quality Updates (4 days)",
+          "type": "switch",
+          "default": true,
+          "description": "Delay security and quality updates for 4 days"
+        }
+      ]
     }
   ]
 }
