@@ -4,7 +4,7 @@ A professional Electron-based GUI for PowerShell automation scripts, branded for
 
 Featuring the Biztech signature green theme (#167E27) and corporate branding.
 
-**🎨 Fully White-Labelable** - Customize branding, logo, and theme without code changes. See [WHITE_LABELING.md](WHITE_LABELING.md) for details.
+**🎨 Fully White-Label able** - Customize branding, logo, and theme without code changes. See [WHITE_LABELING.md](WHITE_LABELING.md) for details.
 
 ## Features
 
