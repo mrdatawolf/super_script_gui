@@ -5,17 +5,14 @@
 
 # --- PowerShell 7+ Requirement ---
 if ($PSVersionTable.PSVersion.Major -lt 7) {
-    $pwsh = (Get-Command pwsh -ErrorAction SilentlyContinue)?.Source
+    $pwshCmd = Get-Command pwsh -ErrorAction SilentlyContinue
+    $pwsh = if ($pwshCmd) { $pwshCmd.Source } else { $null }
     if (-not $pwsh) { $pwsh = "$env:ProgramFiles\PowerShell\7\pwsh.exe" }
     if (Test-Path $pwsh) {
         & $pwsh -ExecutionPolicy Bypass -File $PSCommandPath
     } else {
-        [System.Windows.Forms.MessageBox]::Show(
-            "PowerShell 7+ is required but was not found.`nPlease install it from https://aka.ms/pscore6",
-            "Unsupported PowerShell Version",
-            [System.Windows.Forms.MessageBoxButtons]::OK,
-            [System.Windows.Forms.MessageBoxIcon]::Error
-        ) | Out-Null
+        Write-Host "ERROR: PowerShell 7+ is required but was not found." -ForegroundColor Red
+        Write-Host "Please install it from https://aka.ms/pscore6" -ForegroundColor Yellow
     }
     exit
 }
@@ -51,54 +48,74 @@ Write-Host "=== Windows Time Sync Repair Tool ===" -ForegroundColor Cyan
 
 Write-Host "`nChecking DNS configuration..." -ForegroundColor Cyan
 
-$dns = (Get-DnsClientServerAddress -AddressFamily IPv6,IPv4 | Select-Object -ExpandProperty ServerAddresses)
-
 $BadDNS = @(
     "fec0:0:0:ffff::1"
     "fec0:0:0:ffff::2"
     "fec0:0:0:ffff::3"
 )
 
-$HasBadDNS = $dns | Where-Object { $BadDNS -contains $_ }
+$allDns = Get-DnsClientServerAddress -AddressFamily IPv6,IPv4 | Select-Object -ExpandProperty ServerAddresses
+$HasBadDNS = ($allDns | Where-Object { $BadDNS -contains $_ } | Sort-Object -Unique)
 
 if ($HasBadDNS) {
-    Write-Host "`n⚠️  DNS appears to be misconfigured." -ForegroundColor Yellow
-    Write-Host "Your system is using deprecated IPv6 placeholder DNS servers:"
-    $HasBadDNS | ForEach-Object { Write-Host " - $_" -ForegroundColor Red }
+    Write-Host "`n⚠️  Deprecated IPv6 placeholder DNS entries detected on one or more adapters:" -ForegroundColor Yellow
+    $HasBadDNS | ForEach-Object { Write-Host " - $_" -ForegroundColor Yellow }
 
-    Write-Host "`nThis WILL prevent time synchronization because the system cannot resolve NTP servers." -ForegroundColor Red
+    # Test whether DNS actually resolves before deciding to block
+    $dnsWorks = $false
+    try {
+        $resolved = [System.Net.Dns]::GetHostEntry("time.windows.com")
+        $dnsWorks = $resolved.AddressList.Count -gt 0
+    } catch { }
 
-    $choice = [System.Windows.Forms.MessageBox]::Show(
-        "Would you like the script to fix DNS automatically?",
-        "DNS Misconfiguration Detected",
-        [System.Windows.Forms.MessageBoxButtons]::YesNo,
-        [System.Windows.Forms.MessageBoxIcon]::Warning
-    )
+    if ($dnsWorks) {
+        Write-Host "`nDNS resolution is working despite legacy entries — skipping DNS fix." -ForegroundColor Green
 
-    if ($choice -ne [System.Windows.Forms.DialogResult]::Yes) {
-        Write-Host "`nTime sync cannot succeed until DNS is fixed." -ForegroundColor Red
-        exit
+        $choice = [System.Windows.Forms.MessageBox]::Show(
+            "Deprecated IPv6 DNS entries were found but DNS is resolving correctly.`n`nWould you like to clean them up anyway?",
+            "Legacy DNS Entries Found",
+            [System.Windows.Forms.MessageBoxButtons]::YesNo,
+            [System.Windows.Forms.MessageBoxIcon]::Information
+        )
+    } else {
+        Write-Host "`nDNS resolution is failing — this will prevent time synchronization." -ForegroundColor Red
+
+        $choice = [System.Windows.Forms.MessageBox]::Show(
+            "DNS resolution is failing due to deprecated IPv6 placeholder servers.`n`nWould you like the script to fix DNS automatically?",
+            "DNS Misconfiguration Detected",
+            [System.Windows.Forms.MessageBoxButtons]::YesNo,
+            [System.Windows.Forms.MessageBoxIcon]::Warning
+        )
+
+        if ($choice -ne [System.Windows.Forms.DialogResult]::Yes) {
+            Write-Host "`nTime sync cannot succeed until DNS is fixed." -ForegroundColor Red
+            exit
+        }
     }
 
-    # ============================
-    # DNS FIX
-    # ============================
+    if ($choice -eq [System.Windows.Forms.DialogResult]::Yes) {
+        # ============================
+        # DNS FIX
+        # ============================
 
-    Write-Host "`nFixing DNS..." -ForegroundColor Cyan
+        Write-Host "`nFixing DNS..." -ForegroundColor Cyan
 
-    $goodDNSv4 = @("1.1.1.1","8.8.8.8")
-    $goodDNSv6 = @("2606:4700:4700::1111","2001:4860:4860::8888")
+        $goodDNSv4 = @("1.1.1.1","8.8.8.8")
+        $goodDNSv6 = @("2606:4700:4700::1111","2001:4860:4860::8888")
 
-    $adapters = Get-DnsClient | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" }
+        $adapters = Get-DnsClient | Where-Object { $_.InterfaceAlias -notlike "*Loopback*" }
 
-    foreach ($adapter in $adapters) {
-        Write-Host "Applying DNS to adapter: $($adapter.InterfaceAlias)"
-        Set-DnsClientServerAddress -InterfaceAlias $adapter.InterfaceAlias -ServerAddresses ($goodDNSv4 + $goodDNSv6) -ErrorAction SilentlyContinue
+        foreach ($adapter in $adapters) {
+            Write-Host "Applying DNS to adapter: $($adapter.InterfaceAlias)"
+            Set-DnsClientServerAddress -InterfaceAlias $adapter.InterfaceAlias -ServerAddresses ($goodDNSv4 + $goodDNSv6) -ErrorAction SilentlyContinue
+        }
+
+        ipconfig /flushdns | Out-Null
+
+        Write-Host "DNS repaired successfully." -ForegroundColor Green
     }
-
-    ipconfig /flushdns | Out-Null
-
-    Write-Host "DNS repaired successfully." -ForegroundColor Green
+} else {
+    Write-Host "DNS configuration looks clean." -ForegroundColor Green
 }
 
 
