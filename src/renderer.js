@@ -93,6 +93,10 @@ async function init() {
       applyCustomTheme()
     ]);
 
+    const version = await window.electronAPI.getAppVersion();
+    const versionEl = document.getElementById('appVersion');
+    if (versionEl) versionEl.textContent = `v${version}`;
+
     scriptsData = await window.electronAPI.getScripts();
     renderScriptList();
     scriptCount.textContent = scriptsData.scripts.length;

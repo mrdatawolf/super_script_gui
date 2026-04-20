@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   checkUpdates: (scriptInfo) => ipcRenderer.invoke('check-updates', scriptInfo),
   downloadScript: (scriptInfo) => ipcRenderer.invoke('download-script', scriptInfo),
   loadBranding: () => ipcRenderer.invoke('load-branding'),
-  loadCustomTheme: () => ipcRenderer.invoke('load-custom-theme')
+  loadCustomTheme: () => ipcRenderer.invoke('load-custom-theme'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version')
 });

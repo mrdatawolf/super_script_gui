@@ -589,6 +589,8 @@ ipcMain.handle('download-script', async (event, scriptInfo) => {
   }
 });
 
+ipcMain.handle('get-app-version', () => app.getVersion());
+
 // Load branding configuration
 ipcMain.handle('load-branding', async () => {
   try {
