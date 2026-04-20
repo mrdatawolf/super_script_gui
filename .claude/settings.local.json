@@ -26,7 +26,8 @@
       "Bash(\"./node_modules/electron/dist/electron.exe\" .)",
       "Bash(\"./node_modules/electron/dist/electron.exe\" test-require.js)",
       "Bash(git rm:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(gh api *)"
     ],
     "deny": [],
     "ask": []

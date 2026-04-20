@@ -1,7 +1,7 @@
 {
-  "name": "biztech-tools",
-  "version": "1.4.1",
-  "description": "Biztech PowerShell tools with modern GUI interface",
+  "name": "SuperScriptGUI",
+  "version": "1.4.2",
+  "description": "PowerShell tools with modern GUI interface",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -22,7 +22,7 @@
   },
   "build": {
     "appId": "com.trustbiztech.tools",
-    "productName": "Biztech Tools",
+    "productName": "Super Script GUI",
     "win": {
       "target": [
         "nsis"

@@ -98,6 +98,13 @@
           "type": "switch",
           "default": true,
           "description": "Remove and block the new Outlook app from being installed"
+        },
+        {
+          "name": "DisableWiFiAndBluetooth",
+          "label": "Disable WiFi and Bluetooth",
+          "type": "switch",
+          "default": false,
+          "description": "Disable WiFi and Bluetooth network adapters"
         }
       ]
     },
@@ -400,7 +407,6 @@
       "repo": "PSCurrentVersionOfConnectors",
       "file": "PSCurrentVersionOfConnectors.ps1",
       "description": "Checks Cloudflare tunnel connector versions and identifies outdated tunnels. Requires Cloudflare API credentials. Can use .env file or parameters.",
-      "githubUrl": "https://github.com/mrdatawolf/PSCurrentVersionOfConnectors",
       "requiresAdmin": false,
       "parameters": [
         {
@@ -497,6 +503,15 @@
           "description": "Delay security and quality updates for 4 days"
         }
       ]
+    },
+    {
+      "name": "Windows Time Sync Repair",
+      "repo": "PSWindowsTimeSyncRepair",
+      "file": "timeSyncFix.ps1",
+      "description": "Repairs Windows time synchronization. Checks for misconfigured DNS, fixes the W32tm service, and forces a resync with time.windows.com.",
+      "githubUrl": "https://github.com/mrdatawolf/PSWindowsTimeSyncRepair",
+      "requiresAdmin": true,
+      "parameters": []
     }
   ]
 }

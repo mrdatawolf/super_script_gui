@@ -118,13 +118,13 @@ function renderScriptList() {
       <span class="script-button-title">${script.name} ${adminBadge}</span>
       <span class="script-button-subtitle">${script.repo}</span>
     `;
-    button.addEventListener('click', () => selectScript(script));
+    button.addEventListener('click', (e) => selectScript(script, e));
     scriptList.appendChild(button);
   });
 }
 
 // Select and display script
-async function selectScript(script) {
+async function selectScript(script, event) {
   currentScript = script;
 
   // Update UI
@@ -163,8 +163,8 @@ async function checkAllScriptsForUpdates() {
     const scriptsData = await window.electronAPI.getScripts();
     const scripts = scriptsData.scripts || [];
 
-    // Filter scripts with repos (can be updated)
-    const updatableScripts = scripts.filter(s => s.repo);
+    // Filter scripts with a GitHub URL (can be updated)
+    const updatableScripts = scripts.filter(s => s.repo && s.githubUrl);
 
     if (updatableScripts.length === 0) {
       alert('No updatable scripts found.');

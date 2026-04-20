@@ -34,7 +34,22 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+async function cleanStaleTempFiles() {
+  const os = require('os');
+  const tmpDir = os.tmpdir();
+  try {
+    const entries = await fs.readdir(tmpDir);
+    const stale = entries.filter(f => f.startsWith('biztech-output-') || f.startsWith('biztech-error-'));
+    await Promise.all(stale.map(f => fs.unlink(path.join(tmpDir, f)).catch(() => {})));
+  } catch {
+    // non-fatal
+  }
+}
+
+app.whenReady().then(() => {
+  cleanStaleTempFiles();
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
