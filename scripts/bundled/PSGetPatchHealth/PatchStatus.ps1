@@ -1,10 +1,10 @@
 if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     if ($null -ne $email -and $null -ne $password) {
         $arguments = "-File `"$($myinvocation.MyCommand.Definition)`" -email `"$email`" -password `"$password`" -client `"$client`" -scriptRoot `"$scriptRoot`""
-        Start-Process powershell.exe -ArgumentList $arguments -Verb RunAs
+        Start-Process pwsh.exe -ArgumentList $arguments -Verb RunAs
     } else {
         $arguments = "-File `"$($myinvocation.MyCommand.Definition)`" -scriptRoot `"$scriptRoot`""
-        Start-Process powershell.exe -ArgumentList $arguments -Verb RunAs
+        Start-Process pwsh.exe -ArgumentList $arguments -Verb RunAs
     }
     exit
 }
