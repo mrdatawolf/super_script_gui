@@ -1,6 +1,6 @@
 {
   "name": "SuperScriptGUI",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "PowerShell tools with modern GUI interface",
   "main": "src/main.js",
   "scripts": {

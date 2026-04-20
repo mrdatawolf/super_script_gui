@@ -3,13 +3,32 @@
 # With UAC Elevation + DNS Check
 # ============================
 
+# --- PowerShell 7+ Requirement ---
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    $pwsh = (Get-Command pwsh -ErrorAction SilentlyContinue)?.Source
+    if (-not $pwsh) { $pwsh = "$env:ProgramFiles\PowerShell\7\pwsh.exe" }
+    if (Test-Path $pwsh) {
+        & $pwsh -ExecutionPolicy Bypass -File $PSCommandPath
+    } else {
+        [System.Windows.Forms.MessageBox]::Show(
+            "PowerShell 7+ is required but was not found.`nPlease install it from https://aka.ms/pscore6",
+            "Unsupported PowerShell Version",
+            [System.Windows.Forms.MessageBoxButtons]::OK,
+            [System.Windows.Forms.MessageBoxIcon]::Error
+        ) | Out-Null
+    }
+    exit
+}
+
+Add-Type -AssemblyName System.Windows.Forms
+
 # --- UAC Elevation Check ---
 If (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
 
     Write-Host "Elevation required. Relaunching as Administrator..." -ForegroundColor Yellow
 
     $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = "powershell.exe"
+    $psi.FileName = "pwsh.exe"
     $psi.Arguments = "-ExecutionPolicy Bypass -File `"$PSCommandPath`""
     $psi.Verb = "runas"
 
@@ -49,12 +68,15 @@ if ($HasBadDNS) {
 
     Write-Host "`nThis WILL prevent time synchronization because the system cannot resolve NTP servers." -ForegroundColor Red
 
-    $choice = Read-Host "`nWould you like the script to fix DNS automatically? (Y/N)"
+    $choice = [System.Windows.Forms.MessageBox]::Show(
+        "Would you like the script to fix DNS automatically?",
+        "DNS Misconfiguration Detected",
+        [System.Windows.Forms.MessageBoxButtons]::YesNo,
+        [System.Windows.Forms.MessageBoxIcon]::Warning
+    )
 
-    if ($choice -notin @("Y","y")) {
+    if ($choice -ne [System.Windows.Forms.DialogResult]::Yes) {
         Write-Host "`nTime sync cannot succeed until DNS is fixed." -ForegroundColor Red
-        Write-Host "Press any key to exit..."
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
         exit
     }
 
