@@ -220,11 +220,11 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
       // Use Start-Process with -Verb RunAs to trigger UAC
       // -WindowStyle Hidden hides the window
       const elevatedCommand = `
-        $process = Start-Process powershell.exe -ArgumentList '-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-Command','${escapedWrapper}' -Verb RunAs -PassThru -Wait -WindowStyle Hidden
+        $process = Start-Process pwsh.exe -ArgumentList '-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-Command','${escapedWrapper}' -Verb RunAs -PassThru -Wait -WindowStyle Hidden
         exit $process.ExitCode
       `.trim();
 
-      powershell = spawn('powershell.exe', [
+      powershell = spawn('pwsh.exe', [
         '-NoProfile',
         '-ExecutionPolicy', 'Bypass',
         '-Command', elevatedCommand
@@ -302,7 +302,7 @@ ipcMain.handle('execute-script', async (event, scriptInfo, parameters) => {
 
     } else {
       // Normal execution without elevation
-      powershell = spawn('powershell.exe', [
+      powershell = spawn('pwsh.exe', [
         '-NoProfile',
         '-NonInteractive',
         '-ExecutionPolicy', 'Bypass',

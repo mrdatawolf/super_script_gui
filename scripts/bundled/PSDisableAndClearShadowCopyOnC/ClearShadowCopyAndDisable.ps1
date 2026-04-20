@@ -22,7 +22,7 @@ function Test-ModuleInstallation {
 }
 
 if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Start-Process powershell.exe "-File", ($myinvocation.MyCommand.Definition) -Verb RunAs
+    Start-Process pwsh.exe "-File", ($myinvocation.MyCommand.Definition) -Verb RunAs
     exit
 }
 
