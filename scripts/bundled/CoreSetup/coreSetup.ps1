@@ -54,7 +54,7 @@ coreSetup.ps1 -InstallBaseApps -InstallOptionalApps
 coreSetup.ps1 -InstallDevApps -UninstallWindowsApps
 
 .NOTES
-Requires winget and administrator privileges. Run from Biztech Tools GUI or with elevated PowerShell.
+Requires winget, PS7, and administrator privileges. Run from super script gui or with elevated PowerShell 7.
 Patrick Moon - 2024
 Get the latest version at https://github.com/mrdatawolf/CoreSetup
 #>
@@ -75,6 +75,19 @@ param(
     [switch]$RemoveNewOutlook,
     [switch]$DisableWiFiAndBluetooth
 )
+
+# Re-launch in PowerShell 7 if currently running under Windows PowerShell 5
+if ($PSVersionTable.PSEdition -ne 'Core') {
+    $pwsh = Get-Command pwsh.exe -ErrorAction SilentlyContinue
+    if (-not $pwsh) {
+        Write-Error "PowerShell 7 is required but was not found. Install it from https://aka.ms/powershell and re-run."
+        exit 1
+    }
+    # Rebuild the argument list so all switches survive the re-launch
+    $boundArgs = $PSBoundParameters.GetEnumerator() | ForEach-Object { "-$($_.Key)" }
+    Start-Process pwsh.exe -ArgumentList (@('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $MyInvocation.MyCommand.Definition) + $boundArgs) -Verb RunAs -Wait
+    exit
+}
 
 # Detect if running in GUI mode (any parameters provided)
 $guiMode = $InstallBaseApps -or $InstallOptionalApps -or $InstallOffice365 -or $InstallDevApps -or

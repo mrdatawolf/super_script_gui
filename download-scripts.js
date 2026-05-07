@@ -1,6 +1,7 @@
 /**
- * Script to download default versions of PowerShell scripts from GitHub
- * Run this with: node download-scripts.js
+ * Syncs all bundled PowerShell scripts from their GitHub repos.
+ * Skips any script whose .version SHA already matches the latest commit.
+ * Run with: node download-scripts.js
  */
 
 const GitHubService = require('./src/github-service');
@@ -9,55 +10,56 @@ const path = require('path');
 
 const githubService = new GitHubService();
 
-// Script configurations
-const scripts = [
-  { repo: 'CoreSetup', file: 'CoreSetup.ps1' },
-  { repo: 'PSGatherDNSInfo', file: 'Get-DNSInfo.ps1' },
-  { repo: 'PSNewUser', file: 'New-DomainUser.ps1' },
-  { repo: 'PSGPOGather', file: 'Get-GPOReport.ps1' },
-  { repo: 'PSGetPatchHealth', file: 'Get-PatchHealth.ps1' },
-  { repo: 'PSGatherNetworkData', file: 'Get-NetworkData.ps1' },
-  { repo: 'PSGatherComputerInfo', file: 'Get-ComputerInfo.ps1' },
-  { repo: 'PSDisableAndClearShadowCopyOnC', file: 'Disable-ShadowCopyC.ps1' }
-];
+async function syncAllScripts() {
+  const configPath = path.join(__dirname, 'scripts', 'scripts-config.json');
+  const config = JSON.parse(await fs.readFile(configPath, 'utf-8'));
 
-async function downloadAllScripts() {
-  console.log('Starting script download from GitHub...\n');
+  // Only process scripts that have a GitHub repo and URL
+  const scripts = config.scripts.filter(s => s.repo && s.githubUrl);
+
+  console.log(`Checking ${scripts.length} scripts for updates...\n`);
+
+  let updated = 0;
+  let skipped = 0;
+  let failed = 0;
 
   for (const script of scripts) {
-    console.log(`Downloading ${script.repo}/${script.file}...`);
+    const scriptDir = path.join(__dirname, 'scripts', 'bundled', script.repo);
+    const scriptPath = path.join(scriptDir, script.file);
+    const versionFile = path.join(scriptDir, '.version');
 
     try {
-      const scriptDir = path.join(__dirname, 'scripts', 'bundled', script.repo);
-      const scriptPath = path.join(scriptDir, script.file);
-      const versionFile = path.join(scriptDir, '.version');
+      const { hasUpdate, currentVersion, latestVersion } = await githubService.checkForUpdates(script.repo, versionFile);
 
-      // Download script
+      if (!hasUpdate) {
+        console.log(`  [skip] ${script.repo} — already at ${latestVersion.substring(0, 8)}`);
+        skipped++;
+        continue;
+      }
+
+      const fromLabel = currentVersion ? currentVersion.substring(0, 8) : 'none';
+      console.log(`  [sync] ${script.repo} — ${fromLabel} → ${latestVersion.substring(0, 8)}`);
+
       const result = await githubService.downloadScript(script.repo, script.file, scriptPath);
 
       if (result.success) {
-        console.log(`  ✓ Downloaded to: ${scriptPath}`);
-        console.log(`  ✓ Found at: ${result.foundPath}`);
-
-        // Get and save version info
-        const latestCommit = await githubService.getLatestCommit(script.repo);
-        await githubService.saveVersionInfo(versionFile, latestCommit);
-        console.log(`  ✓ Version: ${latestCommit.substring(0, 7)}`);
+        await githubService.saveVersionInfo(versionFile, latestVersion);
+        console.log(`         saved to ${scriptPath}`);
+        updated++;
       } else {
-        console.log(`  ✗ Failed: ${result.message || 'Unknown error'}`);
+        console.log(`         download failed`);
+        failed++;
       }
     } catch (error) {
-      console.log(`  ✗ Error: ${error.message}`);
+      console.log(`  [fail] ${script.repo} — ${error.message}`);
+      failed++;
     }
-
-    console.log('');
   }
 
-  console.log('Download complete!');
+  console.log(`\nDone. ${updated} updated, ${skipped} already current, ${failed} failed.`);
 }
 
-// Run the download
-downloadAllScripts().catch(error => {
+syncAllScripts().catch(error => {
   console.error('Fatal error:', error);
   process.exit(1);
 });
